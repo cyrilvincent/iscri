@@ -2,7 +2,6 @@ config.py
 
 **/.idea/**
 *.pickle
-**/data/**
 **/chromedriver_win32/**
 *.zip
 *.export.CSV
