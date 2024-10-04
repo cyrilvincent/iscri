@@ -13,8 +13,12 @@ class File(Base):
 
     id = Column(BigInteger, primary_key=True)
     name = Column(String(50), unique=True, nullable=False)
-    date = Column(BigInteger, unique=True, nullable=False)
-    import_start_date = Column(DateTime, nullable=False)
+    date = Column(Date, unique=True, nullable=False) # ok
+    online_date = Column(DateTime)
+    download_date = Column(DateTime)
+    md5 = Column(String(50))
+    dezip_date = Column(DateTime)
+    import_start_date = Column(DateTime)
     import_end_date = Column(DateTime)
     events: Mapped[list["Event"]] = relationship(back_populates="file")
 
@@ -26,16 +30,17 @@ class Event(Base):
     __tablename__ = "event"
 
     id = Column(BigInteger, primary_key=True)
-    date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False, index=True)
     day = Column(BigInteger, nullable=False)
     month_year = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
     fraction_date = Column(Float, nullable=False)
+    gdlet_date = Column(Date, nullable=False, index=True) # ok
     file_id = Column(ForeignKey('file.id'), nullable=False)
     file: Mapped[File] = relationship(back_populates="events")
     event_actors: Mapped[list["EventActor"]] = relationship(back_populates="event")
     event_geos: Mapped[list["EventGeo"]] = relationship(back_populates="event")
-    # actor1_code = Column(String(50), index=True)
+    actor1_code = Column(String(50), index=True) # ok
     # actor1_name = Column(String(255))
     # actor1_country_code = Column(String(3))
     # actor1_known_group_code = Column(String(3))
@@ -45,7 +50,7 @@ class Event(Base):
     # actor1_type1_code = Column(String(3))
     # actor1_type2_code = Column(String(3))
     # actor1_type3_code = Column(String(3))
-    # actor2_code = Column(String(50), index=True)
+    actor2_code = Column(String(50), index=True) # ok
     # actor2_name = Column(String(255))
     # actor2_country_code = Column(String(3))
     # actor2_known_group_code = Column(String(3))
@@ -61,20 +66,20 @@ class Event(Base):
     event_root_code = Column(String(10), nullable=False)
     quad_class = Column(Integer, nullable=False)
     goldstein_scale = Column(Float, nullable=False)
-    num_mentions = Column(Integer, nullable=False) # Les 3 attributs suivants changent dans le temps, peut être qu'un envent id peut se retrouver dans plusieurs fichiers ? Dans ce car faire un select avant l'insert
+    num_mentions = Column(Integer, nullable=False)
     num_sources = Column(Integer, nullable=False)
     num_articles = Column(Integer, nullable=False)
     avg_tone = Column(Float, nullable=False)
     # actor1_geo_type = Column(Integer, nullable=False)
     # actor1_geo_fullname = Column(String(255))
-    # actor1_geo_country_code = Column(String(3))
+    actor1_geo_country_code = Column(String(3)) #ok
     # actor1_geo_adm1_code = Column(String(10))
     # actor1_geo_lat = Column(Float)
     # actor1_geo_lon = Column(Float)
     # actor1_feature_id = Column(String(10))
     # actor2_geo_type = Column(Integer, nullable=False)
     # actor2_geo_fullname = Column(String(255))
-    # actor2_geo_country_code = Column(String(3))
+    actor2_geo_country_code = Column(String(3)) #ok
     # actor2_geo_adm1_code = Column(String(10))
     # actor2_geo_lat = Column(Float)
     # actor2_geo_lon = Column(Float)
@@ -86,10 +91,15 @@ class Event(Base):
     # action_geo_lat = Column(Float)
     # action_geo_lon = Column(Float)
     # action_feature_id = Column(String(10))
-    date_added = Column(BigInteger, nullable=False)
+    date_added = Column(Date, nullable=False) # ok
     url_id = Column(ForeignKey('url.id'), nullable=False)
     url: Mapped["Url"] = relationship()
     parse_date = Column(DateTime, nullable=False)
+
+    __table_args__ = (Index('actor1_geo_country_code', 'actor2_geo_country_code'), )
+
+    def __repr__(self):
+        return f"{self.id} {self.day} {self.actor1_code} {self.actor2_code}"
 
 
 class Actor(Base):
@@ -143,12 +153,12 @@ class Geo(Base):
 
     id = Column(BigInteger, primary_key=True)
     type = Column(Integer, nullable=False)
-    fullname = Column(String(255))
-    country_code = Column(String(3))
+    fullname = Column(String(255), index=True)
+    country_code = Column(String(3), index=True)
     adm1_code = Column(String(10))
     lat = Column(Float)
     lon = Column(Float)
-    feature_id = Column(String(10))
+    feature_id = Column(String(10), index=True)
     event_geos: Mapped[list["EventGeo"]] = relationship(back_populates="geo")
     parse_date = Column(DateTime, nullable=False)
 
@@ -170,7 +180,7 @@ class EventGeo(Base):
     geo: Mapped[Geo] = relationship(back_populates="event_geos")
     num = Column(Integer, nullable=False) # 1,2,3=action
 
-    __table_args__ = (UniqueConstraint('event_id', 'geo_id', 'num'), ) # Index('event_id', 'geo_id'))
+    __table_args__ = (UniqueConstraint('event_id', 'geo_id', 'num'), )
 
     @property
     def key(self):

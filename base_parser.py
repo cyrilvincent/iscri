@@ -34,13 +34,16 @@ class BaseParser(metaclass=ABCMeta):
         self.file = self.context.session.execute(
             select(File).where(File.name == name)).scalars().first()
         if self.file is None:
-            self.file = File()
-            self.file.name = name
-            self.file.import_start_date = datetime.datetime.now()
-            self.file.date = int(name.split(".")[0])
-            self.is_new_file = True
-            self.context.session.add(self.file)
-            self.context.session.commit()
+            print(f"Error, the file {name} does not exist in db")
+            quit(3)
+            # self.file = File() # Ne plus faire car déjà, créé et mettre id = date en int
+            # self.file.id = int(name.split(".")[0])
+            # self.file.name = name
+            # self.file.import_start_date = datetime.datetime.now()
+            # self.is_new_file = True
+            # self.context.session.add(self.file)
+            # self.context.session.commit()
+        self.file.import_start_date = datetime.datetime.now()
 
     def load_cache(self):
         print("Making cache")

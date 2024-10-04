@@ -33,7 +33,7 @@ class EventParser(BaseParser):
             e.year = self.get_int(row[3])
             e.fraction_date = self.get_float(row[4])
             # i = 0
-            # e.actor1_code = self.get_str(row[5 + i])
+            e.actor1_code = self.get_str(row[5])
             # e.actor1_name = self.get_str(row[6 + i])
             # e.actor1_country_code = self.get_str(row[7 + i])
             # e.actor1_known_group_code = self.get_str(row[8 + i])
@@ -44,7 +44,7 @@ class EventParser(BaseParser):
             # e.actor1_type2_code = self.get_str(row[13 + i])
             # e.actor1_type3_code = self.get_str(row[14 + i])
             # i = 10
-            # e.actor2_code = self.get_str(row[5 + i])
+            e.actor2_code = self.get_str(row[15])
             # e.actor2_name = self.get_str(row[6 + i])
             # e.actor2_country_code = self.get_str(row[7 + i])
             # e.actor2_known_group_code = self.get_str(row[8 + i])
@@ -64,28 +64,28 @@ class EventParser(BaseParser):
             e.num_sources = self.get_int(row[32])
             e.num_articles = self.get_int(row[33])
             e.avg_tone = self.get_float(row[34])
-            e.actor1_geo_type = self.get_int(row[35])
-            e.actor1_geo_fullname = self.get_str(row[36])
+            # e.actor1_geo_type = self.get_int(row[35])
+            # e.actor1_geo_fullname = self.get_str(row[36])
             e.actor1_geo_country_code = self.get_str(row[37])
-            e.actor1_geo_adm1_code = self.get_str(row[38])
-            e.actor1_geo_lat = self.get_float(row[39])
-            e.actor1_geo_lon = self.get_float(row[40])
-            e.actor1_feature_id = self.get_str(row[41])
-            e.actor2_geo_type = self.get_int(row[42])
-            e.actor2_geo_fullname = self.get_str(row[43])
+            # e.actor1_geo_adm1_code = self.get_str(row[38])
+            # e.actor1_geo_lat = self.get_float(row[39])
+            # e.actor1_geo_lon = self.get_float(row[40])
+            # e.actor1_feature_id = self.get_str(row[41])
+            # e.actor2_geo_type = self.get_int(row[42])
+            # e.actor2_geo_fullname = self.get_str(row[43])
             e.actor2_geo_country_code = self.get_str(row[44])
-            e.actor2_geo_adm1_code = self.get_str(row[45])
-            e.actor2_geo_lat = self.get_float(row[46])
-            e.actor2_geo_lon = self.get_float(row[47])
-            e.actor2_feature_id = self.get_str(row[48])
-            e.action_geo_type = self.get_int(row[49])
-            e.action_geo_fullname = self.get_str(row[50])
-            e.action_geo_country_code = self.get_str(row[51])
-            e.action_geo_adm1_code = self.get_str(row[52])
-            e.action_geo_lat = self.get_float(row[53])
-            e.action_geo_lon = self.get_float(row[54])
-            e.action_feature_id = self.get_str(row[55])
-            e.date_added = self.get_int(row[56])
+            # e.actor2_geo_adm1_code = self.get_str(row[45])
+            # e.actor2_geo_lat = self.get_float(row[46])
+            # e.actor2_geo_lon = self.get_float(row[47])
+            # e.actor2_feature_id = self.get_str(row[48])
+            # e.action_geo_type = self.get_int(row[49])
+            # e.action_geo_fullname = self.get_str(row[50])
+            # e.action_geo_country_code = self.get_str(row[51])
+            # e.action_geo_adm1_code = self.get_str(row[52])
+            # e.action_geo_lat = self.get_float(row[53])
+            # e.action_geo_lon = self.get_float(row[54])
+            # e.action_feature_id = self.get_str(row[55])
+            e.date_added = self.get_date(row[56])
             e.parse_date = datetime.datetime.now()
         except Exception as ex:
             print(f"ERROR Event row {self.row_num} {e}\n{ex}\n{row}")
@@ -214,6 +214,7 @@ class EventParser(BaseParser):
                 e.file = self.file
         else:
             e.file = self.file
+            e.gdlet_date = self.file.date
             self.events[e.id] = e
             self.nb_new_event += 1
             e.url = self.url_mapper(row)
@@ -223,8 +224,10 @@ class EventParser(BaseParser):
             # self.actor_scoring(e)
         self.context.session.commit()
 
-    # def post_load(self):
-    #     self.save_actor_scores()
+    def post_load(self):
+        self.file.import_end_date = datetime.datetime.now()
+        self.context.session.commit()
+        # self.save_actor_scores()
 
 
 if __name__ == '__main__':

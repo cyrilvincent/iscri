@@ -1,3 +1,39 @@
 Download automatique
 Scoring
 Restitution graphique
+
+Réunion 2
+Indicateur next gen :
+https://www.andybeger.com/blog/2024-05-21-polecat-event-data/
+https://osf.io/preprints/socarxiv/rm5dw
+
+
+risk = quad3 xor quad4
+asymetrique
+enleve action interetatique
+prendre action_code
+prendre root-event=1
+enleve no gov
+
+La paire par actor1countrycode actor2countrycode s'ils sont différents si != ""
+risk par jour, 4 ou 5 max
+risk = moyenne sur le mois
+graine = 1980 annuel
+2006 par mois
+1/4/2013 par jour : moyenne au mois, peut envisager une moyenne flottante sur 30j
+score = iscri = stock
+
+dataviz = https://ourworldindata.org/
+https://ourworldindata.org/owid-grapher
+https://datawrapper.de/
+linechart
+Ecrire doc d'install
+aws ec2 + ports + sudo + console admin
+sur 20240921 les GOV ont toujours un countrycode=null
+
+
+
+
+
+
+
