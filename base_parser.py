@@ -1,7 +1,7 @@
 import datetime
 from typing import Dict, Optional, Tuple
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from abc import ABCMeta, abstractmethod
 import csv
@@ -23,33 +23,41 @@ class BaseParser(metaclass=ABCMeta):
         self.nb_row = 0
         self.nb_ram = 0
         self.is_new_file = False
-        self.events: dict[int, Event] = {}
+        self.events: set[int] = set()
         # self.actors: dict[tuple[str, str, str, str, str, str, str, str, str, str], Actor] = {}
         # self.geos: dict[tuple[int, str], Geo] = {}
 
     def get_file(self):
         name = self.path
         if "/" in name:
-            name = self.path.split("/")[-1] + ".zip"
+            name = self.path.split("/")[-1]
+        name += ".zip"
+        y = int(name[:4])
+        if y <= 2005:
+            name = f"{y}.zip"
+        else:
+            ym = int(name[:6])
+            if ym <= 201303:
+                name = f"{ym}.zip"
         self.file = self.context.session.execute(
             select(File).where(File.name == name)).scalars().first()
         if self.file is None:
-            # print(f"Error: file {name} does not exist in db")
-            # quit(3)
-            self.file = File()
-            self.file.id = int(name.split(".")[0])
-            self.file.name = name
-            self.file.online_date = self.file.download_date = self.file.dezip_date = datetime.datetime.now()
-            self.file.date = datetime.datetime.now()
-            self.is_new_file = True
-            self.context.session.add(self.file)
+            print(f"Error: file {name} does not exist in db")
+            quit(3)
+            # self.file = File()
+            # self.file.id = int(name.split(".")[0])
+            # self.file.name = name
+            # self.file.online_date = self.file.download_date = self.file.dezip_date = datetime.datetime.now()
+            # self.file.date = datetime.datetime()
+            # self.is_new_file = True
+            # self.context.session.add(self.file)
         self.file.import_start_date = datetime.datetime.now()
 
     def load_cache(self):
         print("Making cache")
-        l = self.context.session.execute(select(Event).where(Event.file_id == self.file.id)).scalars().all()
+        l = self.context.session.execute(select(Event.global_event_id).where(Event.file_id == self.file.id)).scalars().all()
         for e in l:
-            self.events[e.id] = e
+            self.events.add(e)
             self.nb_ram += 1
         # l = self.context.session.execute(select(Actor)).scalars().all()
         # for e in l:

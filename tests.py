@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from event_parser import EventParser
+from risk_service import RiskService
 from sqlentities import *
 from dbcontext import *
 
@@ -98,4 +99,9 @@ class GDLETTests(TestCase):
         p.get_file()
         p.load_cache()
         p.parse_row(row)
+
+    def test_date_iterator(self):
+        s = RiskService(None)
+        l = list(s.date_iterator())
+        self.assertTrue(len(l) > 0)
 

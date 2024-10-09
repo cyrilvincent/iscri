@@ -1,21 +1,19 @@
 import argparse
 import datetime
-
-from sqlalchemy import select
-
+from sqlalchemy import select, text
 import config
 import art
 from base_parser import BaseParser
 from dbcontext import Context
-from sqlentities import Event, File, Url, ActorScore #, Actor, EventActor, Geo, EventGeo
+from sqlentities import Event, File, Url #, Actor, EventActor, Geo, EventGeo
 
 
 class EventParser(BaseParser):
 
-    def __init__(self, context, ignore_url=False, commit_row=True):
+    def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
         super().__init__(context)
         self.ignore_url = ignore_url
-        self.commit_row = commit_row
+        self.nb_row_commit = nb_row_commit
         self.nb_existing_event = 0
         self.nb_new_event = 0
         # self.nb_new_actor = 0
@@ -24,11 +22,12 @@ class EventParser(BaseParser):
         # self.nb_new_event_geo = 0
         self.actor_scores: dict[(str, str), int] = {}
         self.nb_actor_score = 0
+        self.nb_doublon = 0
 
     def mapper(self, row) -> Event:
         e = Event()
         try:
-            e.id = self.get_int(row[0])
+            e.global_event_id = self.get_int(row[0])
             e.date = self.get_date(row[1])
             # e.day = self.get_int((row[1]))
             e.month_year = self.get_int(row[2])
@@ -36,6 +35,7 @@ class EventParser(BaseParser):
             # e.fraction_date = self.get_float(row[4])
             i = 0
             e.actor1_code = self.get_str(row[5 + i])
+            e.actor1_is_gov = e.actor1_code is not None and "GOV" in e.actor1_code.upper()
             e.actor1_name = self.get_str(row[6 + i])
             e.actor1_country_code = self.get_str(row[7 + i])
             e.actor1_known_group_code = self.get_str(row[8 + i])
@@ -46,7 +46,8 @@ class EventParser(BaseParser):
             e.actor1_type2_code = self.get_str(row[13 + i])
             e.actor1_type3_code = self.get_str(row[14 + i])
             i = 10
-            e.actor2_code = self.get_str(row[15])
+            e.actor2_code = self.get_str(row[5 + i])
+            e.actor2_is_gov = e.actor2_code is not None and "GOV" in e.actor2_code.upper()
             e.actor2_name = self.get_str(row[6 + i])
             e.actor2_country_code = self.get_str(row[7 + i])
             e.actor2_known_group_code = self.get_str(row[8 + i])
@@ -145,7 +146,7 @@ class EventParser(BaseParser):
 
     def url_mapper(self, row) -> Url:
         e = None
-        if len(row) >= 57:
+        if len(row) > 57:
             e = Url()
             e.url = self.get_str(row[57])
         return e
@@ -159,24 +160,24 @@ class EventParser(BaseParser):
                 self.actor_scores[key] = 0
             self.actor_scores[key] += 1
 
-    def save_actor_scores(self):
-        print(f"Saving {len(self.actor_scores)} actor scores")
-        for k in self.actor_scores.keys():
-            e = (self.context.session.execute(select(ActorScore)
-                 .where((ActorScore.actor1_code == k[0]) & (ActorScore.actor2_code == k[1])))
-                 .scalars().first())
-            if e is None:
-                e = ActorScore()
-                e.actor1_code = k[0]
-                e.actor2_code = k[1]
-                e.score = 0
-                e.last_update = 0
-                self.context.session.add(e)
-            if e.last_update < self.file.date:
-                e.last_update = self.file.date
-                e.score += self.actor_scores[k]
-                self.nb_actor_score += 1
-                self.context.session.commit()
+    # def save_actor_scores(self):
+    #     print(f"Saving {len(self.actor_scores)} actor scores")
+    #     for k in self.actor_scores.keys():
+    #         e = (self.context.session.execute(select(ActorScore)
+    #              .where((ActorScore.actor1_code == k[0]) & (ActorScore.actor2_code == k[1])))
+    #              .scalars().first())
+    #         if e is None:
+    #             e = ActorScore()
+    #             e.actor1_code = k[0]
+    #             e.actor2_code = k[1]
+    #             e.score = 0
+    #             e.last_update = 0
+    #             self.context.session.add(e)
+    #         if e.last_update < self.file.date:
+    #             e.last_update = self.file.date
+    #             e.score += self.actor_scores[k]
+    #             self.nb_actor_score += 1
+    #             self.context.session.commit()
 
     # def parse_actors(self, e: Event, row):
     #     for num in [1, 2]:
@@ -210,15 +211,12 @@ class EventParser(BaseParser):
 
     def parse_row(self, row):
         e = self.mapper(row)
-        if e.id in self.events:
+        if e.global_event_id in self.events:
             self.nb_existing_event += 1
-            e = self.events[e.id]
-            if e.file_id != self.file.id:
-                e.file = self.file
         else:
             e.file = self.file
             e.gdlet_date = self.file.date
-            self.events[e.id] = e
+            self.events.add(e.global_event_id)
             self.nb_new_event += 1
             if not self.ignore_url:
                 e.url = self.url_mapper(row)
@@ -226,12 +224,15 @@ class EventParser(BaseParser):
             # self.parse_events(e, row)
             self.context.session.add(e)
             # self.actor_scoring(e)
-        if self.commit_row:
+        if self.nb_new_event % self.nb_row_commit == 0:
+            print("Committing")
             self.context.session.commit()
 
     def post_load(self):
         self.file.import_end_date = datetime.datetime.now()
         # self.save_actor_scores()
+
+
 
 
 if __name__ == '__main__':
@@ -245,17 +246,17 @@ if __name__ == '__main__':
     parser.add_argument("path", help="Path")
     parser.add_argument("-e", "--echo", help="Sql Alchemy echo", action="store_true")
     parser.add_argument("-u", "--url", help="Ignore URL", action="store_true")
-    parser.add_argument("-c", "--commit", help="Commit each row", action="store_true")
     args = parser.parse_args()
     context = Context()
     context.create(echo=args.echo)
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
-    p = EventParser(context, args.url, args.commit)
+    p = EventParser(context, args.url, config.nb_row_commit)
     p.load(args.path)
     # print(f"New File: {p.is_new_file}")
     print(f"New Events: {p.nb_new_event}")
-    # print(f"Existing Events: {p.nb_existing_event}")
+    # print(f"Nb doublons: {p.nb_doublon}")
+    print(f"Existing Events: {p.nb_existing_event}")
     # print(f"New Actors: {p.nb_new_actor}")
     # print(f"New Event-Actor: {p.nb_new_event_actor}")
     new_db_size = context.db_size()
@@ -280,6 +281,10 @@ if __name__ == '__main__':
 
     # Flat w/o Url : 33s 31Mo 33h 1.5j 113Go
     # Flat all : 48s 46Mo 49h 2j 168Go
+    # 2005 1710s (593s) NO RAM
+    # 20130401 11s
+    # 201303 1088s (311s) NO RAM La clé 253461390 est dupliquée dans 201303 et 20130401
+    # 20160912 87s 35s
 
 
 
