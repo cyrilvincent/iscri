@@ -31,7 +31,7 @@ class RiskService:
             self.nb_ram += 1
         print(f"{self.nb_ram} objects in cache")
 
-    def date_iterator(self):
+    def date_monthly_range(self):
         date = datetime.date(1979,1,1)
         end = datetime.date.today() - dateutil.relativedelta.relativedelta(months=1)
         end = datetime.date(end.year, end.month, calendar.monthrange(end.year, end.month)[1])
@@ -40,17 +40,32 @@ class RiskService:
             yield date
             date = date + dateutil.relativedelta.relativedelta(months=1)
 
+    def date_range(self, start_date: datetime.date, end_date: datetime.date):
+        days = int((end_date - start_date).days)
+        for n in range(days):
+            yield start_date + datetime.timedelta(n)
+
     def check_file_by_date(self, date: datetime.date):
         if date.year < 2007:
-            e = self.context.session.execute(select(File).where(File.year == date.year)).scalars().first()
+            e = self.context.session.execute(
+                select(File).where((File.year == date.year) & (File.import_end_date.isnot(None)))).scalars().first()
             return e is not None
         if date.year < 2013 or (date.year == 2013 and date.month < 4):
-            e = self.context.session.execute(
-                select(File).where((File.year == date.year) & (File.month == date.month))).scalars().first()
+            e = (self.context.session.execute(
+                select(File)
+                .where((File.year == date.year) & (File.month == date.month) & (File.import_end_date.isnot(None))))
+                 .scalars().first())
             return e is not None
-        l = self.context.session.execute(
-                select(File.id).where((File.year == date.year) & (File.month == date.month))).scalars().all()
-        return len(l) == calendar.monthrange(date.year, date.month)[1]
+        l = (self.context.session.execute(
+                select(File.id)
+                .where((File.year == date.year) & (File.month == date.month) & (File.import_end_date.isnot(None))))
+             .scalars().all())
+        nb_not_in_html = 0
+        if date.year == 2014 and date.month == 1:
+            nb_not_in_html = 3
+        elif date.year == 2014 and date.month == 3:
+            nb_not_in_html = 1
+        return len(l) == calendar.monthrange(date.year, date.month)[1] - nb_not_in_html
 
     def compute(self):
         l: list[datetime.datetime] = self.context.session.execute(
@@ -75,13 +90,14 @@ class RiskService:
         # self.context.session.commit()
 
 
-    def compute_month(self, d: datetime.datetime):
+    def compute_month(self, d: datetime.datetime): # todo passer d'abord en compute_daily
         print(f"Compute month {d.year}{d.month}")
         l: list[Event] = (self.context.session.execute(
             select(Event).
             where((Event.month_year == d.year * 100 + d.month) &
-                  (Event.actor1_is_gov) & (Event.actor2_is_gov) &
-                  (Event.actor1_geo_country_code.isnot(None)) & (Event.actor2_geo_country_code.isnot(None))))
+                  (Event.actor1_is_gov) & (Event.actor2_is_gov) & (Event.is_root_event) &
+                  (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None)) &
+                  (Event.actor1_country_code != Event.actor2_country_code)))
              .scalars().all())
         for e in l:
             key = e.actor1_geo_country_code, e.actor2_geo_country_code

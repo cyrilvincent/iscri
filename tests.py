@@ -19,6 +19,7 @@ class GDLETTests(TestCase):
     def test_mapper(self):
         p = EventParser(None)
         s = "1199516024	20140924	201409	2014	2014.7233	GOV	PRESIDENT						GOV			MIL	MILITARY						MIL			1	040	040	04	1	1.0	3	1	3	-0.76045627376426	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	20240921	https://www.saltlakecitysun.com/news/274614956/middle-east-media-research-institute-memri-publishes-a-collection-of-speeches-by-turkish-president-recep-tayyip-erdo287an-from-2005-to-2024"
+        s = "632634259	20170302	201703	2017	2017.1699	USA	UNITED STATES	USA								COP	DEPUTY						COP			1	190	190	19	4	-10.0	6	1	6	-4.44444444444445	3	Jasper County, Missouri, United States	US	USMO	37.2001	-94.3502	758503	3	Jasper County, Missouri, United States	US	USMO	37.2001	-94.3502	758503	3	Jasper County, Missouri, United States	US	USMO	37.2001	-94.3502	758503	20170302	http://breaking911.com/standoff-sheriffs-deputy-shot-seriously-wounded-missouri-hotel/"
         row = s.split("\t")
         e = p.mapper(row)
         self.assertEqual(1199516024, e.id)
@@ -60,19 +61,19 @@ class GDLETTests(TestCase):
         self.assertEqual("SP", e.actor2_feature_id)
         self.assertEqual(20240921, e.date_added)
 
-    def test_actor_mapper(self):
-        p = EventParser(None)
-        s = "1199516024	20140924	201409	2014	2014.7233	GOV	PRESIDENT						GOV			MIL	MILITARY						MIL			1	040	040	04	1	1.0	3	1	3	-0.76045627376426	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	20240921	https://www.saltlakecitysun.com/news/274614956/middle-east-media-research-institute-memri-publishes-a-collection-of-speeches-by-turkish-president-recep-tayyip-erdo287an-from-2005-to-2024"
-        row = s.split("\t")
-        e = p.actor_mapper(row, 1)
-        self.assertEqual("GOV", e.code)
-        self.assertEqual("PRESIDENT", e.name)
-        self.assertEqual("GOV", e.type1_code)
-        e = p.actor_mapper(row, 2)
-        self.assertEqual("MIL", e.code)
-        self.assertEqual("MILITARY", e.name)
-        self.assertEqual("MIL", e.type1_code)
-        self.assertIsNotNone(e.parse_date)
+    # def test_actor_mapper(self):
+    #     p = EventParser(None)
+    #     s = "1199516024	20140924	201409	2014	2014.7233	GOV	PRESIDENT						GOV			MIL	MILITARY						MIL			1	040	040	04	1	1.0	3	1	3	-0.76045627376426	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	1	Spain	SP	SP	40	-4	SP	20240921	https://www.saltlakecitysun.com/news/274614956/middle-east-media-research-institute-memri-publishes-a-collection-of-speeches-by-turkish-president-recep-tayyip-erdo287an-from-2005-to-2024"
+    #     row = s.split("\t")
+    #     e = p.actor_mapper(row, 1)
+    #     self.assertEqual("GOV", e.code)
+    #     self.assertEqual("PRESIDENT", e.name)
+    #     self.assertEqual("GOV", e.type1_code)
+    #     e = p.actor_mapper(row, 2)
+    #     self.assertEqual("MIL", e.code)
+    #     self.assertEqual("MILITARY", e.name)
+    #     self.assertEqual("MIL", e.type1_code)
+    #     self.assertIsNotNone(e.parse_date)
 
     def test_url_mapper(self):
         p = EventParser(None)
@@ -102,6 +103,6 @@ class GDLETTests(TestCase):
 
     def test_date_iterator(self):
         s = RiskService(None)
-        l = list(s.date_iterator())
+        l = list(s.date_monthly_range())
         self.assertTrue(len(l) > 0)
 

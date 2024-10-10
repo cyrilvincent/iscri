@@ -8,6 +8,7 @@ from dbcontext import Context
 from sqlentities import Event, File, Url #, Actor, EventActor, Geo, EventGeo
 
 
+
 class EventParser(BaseParser):
 
     def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
@@ -22,7 +23,6 @@ class EventParser(BaseParser):
         # self.nb_new_event_geo = 0
         self.actor_scores: dict[(str, str), int] = {}
         self.nb_actor_score = 0
-        self.nb_doublon = 0
 
     def mapper(self, row) -> Event:
         e = Event()
@@ -67,27 +67,31 @@ class EventParser(BaseParser):
             e.num_mentions = self.get_int(row[31])
             e.num_sources = self.get_int(row[32])
             e.num_articles = self.get_int(row[33])
+            # if e.quad_class + e.num_sources + e.num_articles + e.num_mentions > 32000:
+            #     print(e.global_event_id)
+            #     quit(99)
             e.avg_tone = self.get_float(row[34])
+            e.is_risk = e.goldstein_scale is not None and e.goldstein_scale < 0 and e.avg_tone < 0
             e.actor1_geo_type = self.get_int(row[35])
             e.actor1_geo_fullname = self.get_str(row[36])
             e.actor1_geo_country_code = self.get_str(row[37])
             e.actor1_geo_adm1_code = self.get_str(row[38])
-            e.actor1_geo_lat = self.get_float(row[39])
-            e.actor1_geo_lon = self.get_float(row[40])
+            e.actor1_geo_lat = self.try_float(row[39])
+            e.actor1_geo_lon = self.try_float(row[40])
             e.actor1_feature_id = self.get_str(row[41])
             e.actor2_geo_type = self.get_int(row[42])
             e.actor2_geo_fullname = self.get_str(row[43])
             e.actor2_geo_country_code = self.get_str(row[44])
             e.actor2_geo_adm1_code = self.get_str(row[45])
-            e.actor2_geo_lat = self.get_float(row[46])
-            e.actor2_geo_lon = self.get_float(row[47])
+            e.actor2_geo_lat = self.try_float(row[46])
+            e.actor2_geo_lon = self.try_float(row[47])
             e.actor2_feature_id = self.get_str(row[48])
             e.action_geo_type = self.get_int(row[49])
             e.action_geo_fullname = self.get_str(row[50])
             e.action_geo_country_code = self.get_str(row[51])
             e.action_geo_adm1_code = self.get_str(row[52])
-            e.action_geo_lat = self.get_float(row[53])
-            e.action_geo_lon = self.get_float(row[54])
+            e.action_geo_lat = self.try_float(row[53])
+            e.action_geo_lon = self.try_float(row[54])
             e.action_feature_id = self.get_str(row[55])
             e.date_added = self.get_date(row[56])
             e.parse_date = datetime.datetime.now()
@@ -225,12 +229,13 @@ class EventParser(BaseParser):
             self.context.session.add(e)
             # self.actor_scoring(e)
         if self.nb_new_event % self.nb_row_commit == 0:
-            print("Committing")
+            if self.nb_row_commit >= 1000:
+                print("Committing")
             self.context.session.commit()
 
     def post_load(self):
         self.file.import_end_date = datetime.datetime.now()
-        # self.save_actor_scores()
+
 
 
 

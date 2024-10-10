@@ -1,0 +1,11 @@
+GOV only il y a également USAGOV, BELGOV, POLGOV, EURGOV, FRAGOV, FRAMILGOV, FRAELIGOV, ...
+
+capture gcollapse (mean)   RISK*   ,  by( actor1countrycode actor2countrycode m1)
+capture gcollapse (mean) RISK*, by( iso3_o iso3_d monthyear)
+MEAN de MEAN
+Exemple 1 : 1 event avec 1 mentions par jour sur 30 jours => RISK daily = 1 * 30 jours => RISK monthly = 1
+Exemple 2 : 1 event avec 60 mentions + 1 event avec 25 mentions + 1 event avec 5 mentions le tout sur 1 seule journée => RISK daily = 30 * 1 jour => RISK monthly = 1
+Exemple 3 : 1 event avec 60 mentions le jour 1, 1 event avec 25 mentions le jour 2, 1 event avec 5 mentions le jour 3 => RISK day 1 = 60, RiSK day 2 = 25, RISK day 3 = 5 => RISK monthly = 3
+L'exemple 1 et 2 ont le même risk monthly mais avec un nombre de mention très différent
+L'exemple 2 et 3 ont le même nombre de mention mais avec un risk monthly très différent
+Ne faudrait il pas faire un MEAN de SUM ?

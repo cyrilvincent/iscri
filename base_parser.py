@@ -81,6 +81,12 @@ class BaseParser(metaclass=ABCMeta):
     def get_float(self, v):
         return None if v == "" else float(v)
 
+    def try_float(self, v):
+        try:
+            return self.get_float(v)
+        except:
+            return None
+
     def get_str(self, v):
         return None if v == "" else v
 
@@ -95,12 +101,12 @@ class BaseParser(metaclass=ABCMeta):
             return s[1:-1]
         return s
 
-    def duration(self):
+    def duration(self, coef=0.0):
         duration = time.perf_counter() - time0 + 1e-6
         print(f"Parse {self.row_num} rows {(self.row_num / self.nb_row) * 100:.1f}% "
               f"in {(duration):.0f}s "
               f"@{self.row_num / duration:.0f}row/s "
-              f"{((self.nb_row / self.row_num) * duration) - duration + 1:.0f}s remaining ")
+              f"{((self.nb_row / self.row_num) * duration) - duration + (duration / (self.row_num / self.nb_row)) * coef:.0f}s remaining ")
 
     def load(self, path: str, delimiter='\t', encoding="utf8", header=False):
         print(f"Loading {path}")
@@ -118,13 +124,13 @@ class BaseParser(metaclass=ABCMeta):
                 self.parse_row(row)
                 if self.row_num % 10000 == 0 or self.row_num == 10 or self.row_num == 100 \
                         or self.row_num == 1000 or self.row_num == self.nb_row:
-                    self.duration()
+                    self.duration(2.0)
 
         self.post_load()
         self.file.import_end_date = datetime.datetime.now()
         print("Committing")
         self.context.session.commit()
-        self.duration()
+        self.duration(1.0)
 
 
     @abstractmethod

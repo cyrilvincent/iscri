@@ -33,7 +33,7 @@ class Event(Base):
     global_event_id = Column(BigInteger, nullable=False, index=True)
     date = Column(Date, nullable=False)
     # day = Column(BigInteger, nullable=False)
-    month_year = Column(Integer, nullable=False)
+    month_year = Column(Integer, nullable=False, index=True)
     year = Column(SmallInteger, nullable=False)
     # fraction_date = Column(Float, nullable=False)
     gdlet_date = Column(Date, nullable=False)
@@ -41,10 +41,10 @@ class Event(Base):
     file: Mapped[File] = relationship(back_populates="events")
     # event_actors: Mapped[list["EventActor"]] = relationship(back_populates="event")
     # event_geos: Mapped[list["EventGeo"]] = relationship(back_populates="event")
-    actor1_is_gov = Column(Boolean, nullable=False, index=True)
+    actor1_is_gov = Column(Boolean, nullable=False)
     actor1_code = Column(String(50))
     actor1_name = Column(String(255))
-    actor1_country_code = Column(String(3))
+    actor1_country_code = Column(String(3), index=True)
     actor1_known_group_code = Column(String(3))
     actor1_ethnic_code = Column(String(3))
     actor1_religion1_code = Column(String(3))
@@ -52,10 +52,10 @@ class Event(Base):
     actor1_type1_code = Column(String(3))
     actor1_type2_code = Column(String(3))
     actor1_type3_code = Column(String(3))
-    actor2_is_gov = Column(Boolean, nullable=False, index=True)
-    actor2_code = Column(String(50), index=True)
+    actor2_is_gov = Column(Boolean, nullable=False)
+    actor2_code = Column(String(50))
     actor2_name = Column(String(255))
-    actor2_country_code = Column(String(3))
+    actor2_country_code = Column(String(3), index=True)
     actor2_known_group_code = Column(String(3))
     actor2_ethnic_code = Column(String(3))
     actor2_religion1_code = Column(String(3))
@@ -69,20 +69,21 @@ class Event(Base):
     event_root_code = Column(String(10), nullable=False)
     quad_class = Column(SmallInteger, nullable=False)
     goldstein_scale = Column(Float)
-    num_mentions = Column(SmallInteger, nullable=False)
-    num_sources = Column(SmallInteger, nullable=False)
-    num_articles = Column(SmallInteger, nullable=False)
+    num_mentions = Column(Integer, nullable=False)
+    num_sources = Column(Integer, nullable=False)
+    num_articles = Column(Integer, nullable=False)
     avg_tone = Column(Float, nullable=False)
+    is_risk = Column(Boolean, nullable=False)
     actor1_geo_type = Column(Integer)
     actor1_geo_fullname = Column(String(255))
-    actor1_geo_country_code = Column(String(3), index=True)
+    actor1_geo_country_code = Column(String(3))
     actor1_geo_adm1_code = Column(String(10))
     actor1_geo_lat = Column(Float)
     actor1_geo_lon = Column(Float)
     actor1_feature_id = Column(String(10))
     actor2_geo_type = Column(Integer)
     actor2_geo_fullname = Column(String(255))
-    actor2_geo_country_code = Column(String(3), index=True)
+    actor2_geo_country_code = Column(String(3))
     actor2_geo_adm1_code = Column(String(10))
     actor2_geo_lat = Column(Float)
     actor2_geo_lon = Column(Float)
@@ -99,7 +100,7 @@ class Event(Base):
     url: Mapped["Url"] = relationship()
     parse_date = Column(DateTime, nullable=False)
 
-    # __table_args__ = (Index('actor1_geo_country_code', 'actor2_geo_country_code'), )
+    __table_args__ = (Index('ix_event_actor1_is_gov_actor2_is_gov_is_root_event_is_risk', 'actor1_is_gov', 'actor2_is_gov', 'is_root_event', 'is_risk'), ) #todo si gov et non isgov à changer
 
     def __repr__(self):
         return f"{self.id} {self.global_event_id}"
@@ -204,20 +205,44 @@ class Url(Base):
         return f"{self.id} {self.url}"
 
 
-class IscriScore(Base):
-    __tablename__ = "iscri_score"
+class Risk(Base):
+    __tablename__ = "risk" # daily
 
     id = Column(BigInteger, primary_key=True)
-    year = Column(SmallInteger, nullable=False)
-    month = Column(SmallInteger, nullable=False)
+    date = Column(Date, nullable=False)
     actor1_code = Column(String(50), nullable=False)
     actor2_code = Column(String(50), nullable=False)
     risk_score = Column(Float, nullable=False)
+    risk3_score = Column(Float, nullable=False)
+    risk4_score = Column(Float, nullable=False)
+    risk_date = Column(DateTime, nullable=False)
+
+    __table_args__ = (UniqueConstraint('date', 'actor1_code', 'actor2_code'),)
+
+    @property
+    def key(self):
+        return self.date, self.actor1_code, self.actor2_code
+
+    def __repr__(self):
+        return f"{self.id} {self.date} {self.actor1_code} {self.actor2_code} {self.risk_score}"
+
+
+class Iscri(Base):
+    __tablename__ = "iscri" # monthly
+
+    id = Column(BigInteger, primary_key=True)
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+    actor1_code = Column(String(50), nullable=False)
+    actor2_code = Column(String(50), nullable=False)
+    risk_score = Column(Float, nullable=False)
+    risk3_score = Column(Float, nullable=False)
+    risk4_score = Column(Float, nullable=False)
     risk_date = Column(DateTime, nullable=False)
     iscri_score = Column(Float)
     iscri_date = Column(DateTime)
 
-    __table_args__ = (UniqueConstraint('actor1_code', 'actor2_code'),)
+    __table_args__ = (UniqueConstraint('year', 'month', 'actor1_code', 'actor2_code'),)
 
     @property
     def key(self):
@@ -225,5 +250,4 @@ class IscriScore(Base):
 
     def __repr__(self):
         return f"{self.id} {self.year}{self.month} {self.actor1_code} {self.actor2_code} {self.risk_score}"
-
 
