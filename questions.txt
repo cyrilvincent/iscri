@@ -1,11 +1,37 @@
-GOV only il y a également USAGOV, BELGOV, POLGOV, EURGOV, FRAGOV, FRAMILGOV, FRAELIGOV, ...
+Tu gardes NumArticles dans ton code stata (capture rename v34 numarticles), est il pris en compte dans le calcul des scores ?
 
-capture gcollapse (mean)   RISK*   ,  by( actor1countrycode actor2countrycode m1)
-capture gcollapse (mean) RISK*, by( iso3_o iso3_d monthyear)
-MEAN de MEAN
-Exemple 1 : 1 event avec 1 mentions par jour sur 30 jours => RISK daily = 1 * 30 jours => RISK monthly = 1
-Exemple 2 : 1 event avec 60 mentions + 1 event avec 25 mentions + 1 event avec 5 mentions le tout sur 1 seule journée => RISK daily = 30 * 1 jour => RISK monthly = 1
-Exemple 3 : 1 event avec 60 mentions le jour 1, 1 event avec 25 mentions le jour 2, 1 event avec 5 mentions le jour 3 => RISK day 1 = 60, RiSK day 2 = 25, RISK day 3 = 5 => RISK monthly = 3
-L'exemple 1 et 2 ont le même risk monthly mais avec un nombre de mention très différent
-L'exemple 2 et 3 ont le même nombre de mention mais avec un risk monthly très différent
-Ne faudrait il pas faire un MEAN de SUM ?
+Je voudrais la définition exacte des variables suivantes
+C is the daily  number of verbal or material conflict : QuadClass >= 3 & GoldsteinScale < 0 & AvgTone < 0 & ActorXType1Code == "GOV" & IsRootEvent == True
+E is the daily total number of cooperative and conflictual interstate events : ActorXCountryCode == "GOV" & IsRootEvent == True, ne tient pas compte ni de QuadClass, ni de GoldStrinSale ni de AvgTine
+
+ISCR(s, t, my) = (1 / D(my)) * SUM(C(s, t, d) / E(s, t, d)) + 0.9 * ISCR(s, t, my - 1)
+où s = Actor1Countrycode
+et t = Actor2CountryCode et s != t
+et my = MonthYear
+et D(my) = nb jour du mois my
+et C(s, t, d) = Nombre de (QuadClass >= 3 & GoldsteinScale < 0 & AvgTone < 0 & ActorXCountryCode == "GOV" & IsRootEvent == True & d == Day) pour s et t
+et E(s, t, d) = Nombre de (ActorXType1yCode == "GOV" & IsRootEvent == 1 & d == Day) pour s et t
+et SUM est la somme pour tous le jours d du mois my
+
+Vocabulaire
+Je propose d'appeler pour une paire source, target
+ISCRIm : l'ISCRI du mois m
+RISKm : le risque moyen du mois m, afin d'avoir la formule ISCRIm = RISKm + 0.9 * ISCRIm-1, pour QuadClass == 3 | 4
+RISKd : le risque du jour d, on a donc RISKm = SUM(RISKd) / NbJourDuMoism, pour QuadClass == 3 | 4
+RISK3 : idem RISK pour QuadClass == 3
+RISK4 : idem RISK pour QuadClass == 4
+RISKd = C / E
+C = MEAN NumArticle négatif (à préciser) ou SUM EVENT ?
+E = MEAN NumArticle ou SUM EVENT ?
+On a donc RISKm = ISCRIm - 0.9 + ISCRIm-1
+
+S'assurer du résultat SQL avec BigQuery sur Cloud
+
+/!\ Je bosse sur tous les fichiers et pas 1 les dates sont réparties => Ajouter filtre < file.date du 1 du mois suivant
+
+*drop if goldsteinscale>=0
+*drop if avgtone>=0 => ces variables sortent de nul part
+
+
+
+

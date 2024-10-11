@@ -1,0 +1,8 @@
+Test unitaire sur les risk_daily pour 2023 & 2014 USA -> CHN
+Risk_service verif code_coutry = iso
+graine 2014 -> 2015
+/!\ Gdlet -> gdelt
+Ajouter filtre < file.date du 1 du mois suivant
+C'est bien un OR GOV
+
+

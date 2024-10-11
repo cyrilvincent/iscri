@@ -35,7 +35,7 @@ class EventParser(BaseParser):
             # e.fraction_date = self.get_float(row[4])
             i = 0
             e.actor1_code = self.get_str(row[5 + i])
-            e.actor1_is_gov = e.actor1_code is not None and "GOV" in e.actor1_code.upper()
+            # e.actor1_is_gov = e.actor1_code is not None and "GOV" in e.actor1_code.upper()
             e.actor1_name = self.get_str(row[6 + i])
             e.actor1_country_code = self.get_str(row[7 + i])
             e.actor1_known_group_code = self.get_str(row[8 + i])
@@ -47,7 +47,7 @@ class EventParser(BaseParser):
             e.actor1_type3_code = self.get_str(row[14 + i])
             i = 10
             e.actor2_code = self.get_str(row[5 + i])
-            e.actor2_is_gov = e.actor2_code is not None and "GOV" in e.actor2_code.upper()
+            # e.actor2_is_gov = e.actor2_code is not None and "GOV" in e.actor2_code.upper()
             e.actor2_name = self.get_str(row[6 + i])
             e.actor2_country_code = self.get_str(row[7 + i])
             e.actor2_known_group_code = self.get_str(row[8 + i])
@@ -71,7 +71,7 @@ class EventParser(BaseParser):
             #     print(e.global_event_id)
             #     quit(99)
             e.avg_tone = self.get_float(row[34])
-            e.is_risk = e.goldstein_scale is not None and e.goldstein_scale < 0 and e.avg_tone < 0
+            # e.is_risk = e.goldstein_scale is not None and e.goldstein_scale < 0 and e.avg_tone < 0
             e.actor1_geo_type = self.get_int(row[35])
             e.actor1_geo_fullname = self.get_str(row[36])
             e.actor1_geo_country_code = self.get_str(row[37])
