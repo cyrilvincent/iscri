@@ -1,0 +1,4 @@
+The default Jupyter inline backend is not interactive. The notebook (nbagg) and Jupyter lab backends are interactive and sliders should work.
+https://jupyterbook.org/en/stable/interactive/interactive.html
+Demo plotly : https://plotly.com/python/sliders/
+Site Web zero cost Dash : https://dash.plotly.com/minimal-app

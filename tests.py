@@ -8,6 +8,8 @@ from event_parser import EventParser
 from risk_service import RiskService
 from sqlentities import *
 from dbcontext import *
+import country_converter as coco
+import pandas as pd
 
 
 class GDLETTests(TestCase):
@@ -103,6 +105,78 @@ class GDLETTests(TestCase):
 
     def test_date_iterator(self):
         s = RiskService(None)
-        l = list(s.date_monthly_range())
+        l = list(s.month_range())
         self.assertTrue(len(l) > 0)
+
+    def test_risk_compute_daily(self):
+        d = datetime.date(2015,7,5)
+        context = Context()
+        context.create(echo=True)
+        s = RiskService(context)
+        res = s.compute_daily(d)
+        dr = res[("USA", "CHN")]
+        self.assertEqual(29, dr.quad3_nb)
+        self.assertEqual(2, dr.quad4_nb)
+        self.assertEqual(44, dr.total_nb)
+
+    def test_risk_compute_dailies(self):
+        d = datetime.date(2015,5,7)
+        context = Context()
+        context.create(echo=True)
+        s = RiskService(context)
+        s.compute_dailies(d, d + datetime.timedelta(days=1))
+
+    def test_coco(self):
+        cc = coco.CountryConverter()
+        pd.set_option('display.max_columns', None)
+        pd.set_option('display.width', 500)
+        print(cc.data.head(50))
+        print(cc.data.ISO3)
+        s = RiskService(None)
+        res = s.norm_country_code("FRA")
+        self.assertEqual("FRA", res)
+        res = s.norm_country_code("FR")
+        self.assertEqual("FRA", res)
+        res = s.norm_country_code("France")
+        self.assertEqual("FRA", res)
+        res = s.norm_country_code("XXX")
+        self.assertEqual("XXX", res)
+
+    def test_risk_compute_monthly(self):
+        d = datetime.date(2015, 2, 28)
+        context = Context()
+        context.create(echo=True)
+        s = RiskService(context)
+        dico = s.compute_monthly(d)
+        i = dico[("USA", "CHN")]
+        self.assertAlmostEqual(0.078, i.risk, delta=0.001)
+        self.assertAlmostEqual(0.037, i.risk3, delta=0.001)
+        self.assertAlmostEqual(0.041, i.risk4, delta=0.001)
+
+    def test_is_all_files_presents_by_year_month(self):
+        context = Context()
+        context.create(echo=True)
+        s = RiskService(context)
+        res = s.is_all_files_presents_by_year_month(2015,2)
+        self.assertTrue(res)
+
+    def test_iscri(self):
+        s = RiskService(None)
+        res = s.iscri(0.25, 1.7)
+        self.assertAlmostEqual(1.78, res, delta=0.01)
+
+    def test_compute_iscri(self):
+        i = Iscri()
+        i.risk3 = i.risk4 = 0
+        i.risk = 0.25
+        p = Iscri()
+        p.iscri3 = p.iscri4 = 0
+        p.iscri = 1.7
+        s = RiskService(None)
+        i = s.compute_iscri(i, p)
+        self.assertAlmostEqual(1.78, i.iscri, delta=0.01)
+
+
+
+
 
