@@ -175,6 +175,8 @@ class GDLETTests(TestCase):
         s = RiskService(None)
         i = s.compute_iscri(i, p)
         self.assertAlmostEqual(1.78, i.iscri, delta=0.01)
+        i = s.compute_iscri(i, None)
+        self.assertAlmostEqual(0.25, i.iscri, delta=0.01)
 
 
 

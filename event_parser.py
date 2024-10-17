@@ -219,7 +219,7 @@ class EventParser(BaseParser):
             self.nb_existing_event += 1
         else:
             e.file = self.file
-            e.gdlet_date = self.file.date
+            e.gdelt_date = self.file.date
             self.events.add(e.global_event_id)
             self.nb_new_event += 1
             if not self.ignore_url:

@@ -24,6 +24,7 @@ class RiskService:
         self.nb_ram = 0
         self.nb_new_daily = 0
         self.nb_new_monthly = 0
+        self.nb_new_iscri = 0
         self.cc = coco.CountryConverter()
 
     # def load_cache(self):
@@ -152,7 +153,7 @@ class RiskService:
         self.context.session.commit()
 
     def compute_monthly(self, last_month_day: datetime.date) -> dict[tuple[str, str], Iscri]:
-        print(f"Compute month {last_month_day.year}-{last_month_day.month:02d}")
+        print(f"Compute risk month {last_month_day.year}-{last_month_day.month:02d}")
         first_month_day = datetime.date(year=last_month_day.year, month=last_month_day.month, day=1)
         l: list[DailyRisk] = self.context.session.execute(
             select(DailyRisk).
@@ -205,20 +206,21 @@ class RiskService:
         i.iscri4 = self.iscri(i.risk4, previous.iscri4)
         i.iscri = self.iscri(i.risk, previous.iscri)
         i.iscri_date = datetime.datetime.now()
-        return i  # A tester avec previous = None
+        return i
 
     def compute_iscri_monthly(self, year: int, month: int):
-        print(f"Compute iscri for {year}-{month:02d}")
+        print(f"Compute iscri month {year}-{month:02d}")
         previous_year, previous_month = year, month - 1
         if previous_month == 0:
             previous_year, previous_month = previous_year - 1, 12
         dico: dict[tuple[str, str], tuple[Iscri, Iscri | None]] = {}
         l = self.context.session.execute(
-            select(Iscri).where((Iscri.year == year) & (Iscri.month == month))).scalars.all()
+            select(Iscri).where((Iscri.year == year) & (Iscri.month == month))).scalars().all()
         for e in l:
             dico[e.actor1_code, e.actor2_code] = e, None
         l = self.context.session.execute(
-            select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month))).scalars.all()
+            select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month) &
+                                (Iscri.iscri > 1e-4))).scalars().all()
         for e in l:
             if (e.actor1_code, e.actor2_code) not in dico:
                 i = Iscri()
@@ -228,41 +230,25 @@ class RiskService:
                 i.risk_date = datetime.datetime.now()
                 dico[e.actor1_code, e.actor2_code] = i, e
                 self.context.session.add(i)
+                self.nb_new_iscri += 1
             else:
                 dico[e.actor1_code, e.actor2_code] = dico[e.actor1_code, e.actor2_code][0], e
         for t in dico.values():
             self.compute_iscri(t[0], t[1])
         self.context.session.commit()
 
-
-
-
-
-
-
     def compute_iscri_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
         print("Compute iscris")
         for m in self.month_range(start_date, end_date):
-            iscris: list[Iscri] = self.context.session.execute(
-                select(Iscri).where((Iscri.year == m.year) & (Iscri.month == m.month))).scalars.all()
-            previouss = None # A faire avec le mois précédent m.addmonth(-1)
-            # previous_dico todo
-            #Faire une boucle par pair de pays
-            for iscri in iscris:
-                if iscri is None: # A remonter d'un cran len(iscris)==0
-                    print(f"Stop at {m.year}-{m.month:02d}")
-                    break
-                # A porter dans compute_iscri_monthly
-                elif iscri.iscri_date is None:
-                    print(f"Compute iscri for {m.year}-{m.month:02d}")
-                    # Créer les iscri pour chaque pair
-                    # le current peut être à None ainsi que le previous
-                    # filtrer si iscri < 1e-5
-                    # Appeler le monthly uniquement si l'iscri est None
-                else:
-                    print(f"Iscri is already computed for {m.year}-{m.month:02d}")
-                # previous = i
-
+            iscri: Iscri = self.context.session.execute(
+                select(Iscri).where((Iscri.year == m.year) & (Iscri.month == m.month))).scalars.first()
+            if iscri is None:
+                print(f"Stop at {m.year}-{m.month:02d}")
+                break
+            if iscri.iscri_date is None:
+                self.compute_iscri_monthly(m.year, m.month)
+            else:
+                print(f"Iscri is already computed for {m.year}-{m.month:02d}")
 
     def modify_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
                      iscri: float, iscri3=0.0, iscri4=0.0):
@@ -271,14 +257,19 @@ class RiskService:
                                 (Iscri.actor1_code == actor1_code) & (Iscri.actor2_code == actor2_code))).
              scalars().first())
         i.iscri, i.iscri3, i.iscri4 = iscri, iscri3, iscri4
+        i.iscri_date = datetime.datetime.now()
         self.context.session.commit()
 
-
-
-
-
-
-
+    def create_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
+                     iscri: float, iscri3=0.0, iscri4=0.0):
+        i = Iscri()
+        i.actor1_code, i.actor2_code = actor1_code, actor2_code
+        i.year, i.month = year, month
+        i.iscri, i.iscri3, i.iscri4 = iscri, iscri3, iscri4
+        i.risk = i.risk3 = i.risk4 = 0
+        i.risk_date = i.iscri_date = datetime.datetime.now()
+        self.context.session.add(i)
+        self.context.session.commit()
 
 
 if __name__ == '__main__':
@@ -297,10 +288,13 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
-    m.compute_dailies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
-    m.compute_monthlies(datetime.date(2015, 2, 1), datetime.date(2015, 12, 31))
+    # m.compute_dailies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
+    m.compute_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
+    m.compute_iscri_monthly(2015, 2)
+    # m.create_iscri(2015,1,"USA","CHN",1.57)
     print(f"Nb new daily risks: {m.nb_new_daily}")
     print(f"Nb new monthly risks: {m.nb_new_monthly}")
+    print(f"Nb new iscris: {m.nb_new_iscri}")
     new_db_size = context.db_size()
     print(f"Database {context.db_name}: {new_db_size:.0f} Mb")
     print(f"Database grows: {new_db_size - db_size:.0f} Mb ({((new_db_size - db_size) / db_size) * 100:.1f}%)")

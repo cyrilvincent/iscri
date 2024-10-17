@@ -36,7 +36,7 @@ class Event(Base):
     month_year = Column(Integer, nullable=False, index=True)
     year = Column(SmallInteger, nullable=False)
     # fraction_date = Column(Float, nullable=False)
-    gdlet_date = Column(Date, nullable=False)
+    gdelt_date = Column(Date, nullable=False)
     file_id = Column(ForeignKey('file.id'), nullable=False, index=True)
     file: Mapped[File] = relationship(back_populates="events")
     # event_actors: Mapped[list["EventActor"]] = relationship(back_populates="event")
@@ -258,5 +258,5 @@ class Iscri(Base):
         return self.year, self.month, self.actor1_code, self.actor2_code
 
     def __repr__(self):
-        return f"{self.id} {self.year}{self.month} {self.actor1_code} {self.actor2_code}"
+        return f"{self.id} {self.year}{self.month:02d} {self.actor1_code} {self.actor2_code}"
 
