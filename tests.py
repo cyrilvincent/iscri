@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from event_parser import EventParser
+from jupyter_service import JupyterService
 from risk_service import RiskService
 from sqlentities import *
 from dbcontext import *
@@ -178,6 +179,12 @@ class GDLETTests(TestCase):
         i = s.compute_iscri(i, None)
         self.assertAlmostEqual(0.25, i.iscri, delta=0.01)
 
+    def test_get_by_global_event_id(self):
+        context = Context()
+        context.create(echo=True)
+        s = JupyterService(context)
+        res = s.get_by_global_event_id(420620763)
+        self.assertIsNotNone(res)
 
 
 
