@@ -1,9 +1,10 @@
 import datetime
+import sys
+import numpy as np
+import sqlalchemy
 from unittest import TestCase
-
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-
 from event_parser import EventParser
 from jupyter_service import JupyterService
 from risk_service import RiskService
@@ -11,9 +12,23 @@ from sqlentities import *
 from dbcontext import *
 import country_converter as coco
 import pandas as pd
+import psycopg2
+import jupyterlab
+import ipywidgets
 
 
 class GDLETTests(TestCase):
+
+    def test_version(self):
+        print(sys.version)
+        print(sqlalchemy.__version__)
+        print(pd.__version__)
+        print(np.__version__)
+        print(psycopg2.__version__)
+        print(jupyterlab.__version__)
+        print(ipywidgets.__version__)
+
+
 
     def test_test_file(self):
         p = EventParser(None)

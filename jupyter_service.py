@@ -17,14 +17,14 @@ class JupyterService:
         self.df = None
 
     def make_sql(self, table="event", criterias: dict[str, str | float] = {}) -> str:
-        sql = f"select * from {table} "
+        sql = f"SELECT * FROM {table} "
         first = True
         for k in criterias.keys():
             if first:
-                sql += "where "
+                sql += "WHERE "
                 first = False
             else:
-                sql += " and "
+                sql += " AND "
             v = criterias[k]
             if isinstance(v, str) and ("true" in v or "false" in v or "null" in v):
                 sql += f"{k} is {v}"
