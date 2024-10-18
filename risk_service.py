@@ -111,7 +111,6 @@ class RiskService:
             # code2 = self.norm_country_code(e.actor2_country_code)
             key: tuple[str, str] = e.actor1_country_code, e.actor2_country_code
             if key not in daily_dict:
-                first = True
                 if first:
                     print(f"Compute daily risk {d}")
                     first = False
@@ -191,7 +190,7 @@ class RiskService:
                         if i.risk != 0:
                             self.context.session.add(i)
                             self.nb_new_monthly += 1
-                            self.context.session.commit()
+                    self.context.session.commit()
                 else:
                     print(f"Month {m.year}-{m.month:02d} is not complete")
 
@@ -220,7 +219,7 @@ class RiskService:
             dico[e.actor1_code, e.actor2_code] = e, None
         l = self.context.session.execute(
             select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month) &
-                                (Iscri.iscri > 1e-4))).scalars().all()
+                                (Iscri.iscri > 1e-5))).scalars().all()
         for e in l:
             if (e.actor1_code, e.actor2_code) not in dico:
                 i = Iscri()
@@ -241,7 +240,7 @@ class RiskService:
         print("Compute iscris")
         for m in self.month_range(start_date, end_date):
             iscri: Iscri = self.context.session.execute(
-                select(Iscri).where((Iscri.year == m.year) & (Iscri.month == m.month))).scalars.first()
+                select(Iscri).where((Iscri.year == m.year) & (Iscri.month == m.month))).scalars().first()
             if iscri is None:
                 print(f"Stop at {m.year}-{m.month:02d}")
                 break
@@ -271,17 +270,21 @@ class RiskService:
         self.context.session.add(i)
         self.context.session.commit()
 
+    def compute(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
+        m.compute_dailies(start_date, end_date)
+        m.compute_monthlies(start_date, end_date)
+        m.compute_iscri_monthlies(start_date, end_date)
+
 
 if __name__ == '__main__':
     art.tprint(config.name, "big")
-    print("Risk Manager")
+    print("Risk Service")
     print("============")
     print(f"V{config.version}")
     print(config.copyright)
     print()
     parser = argparse.ArgumentParser(description="Event Parser")
     parser.add_argument("-e", "--echo", help="Sql Alchemy echo", action="store_true")
-    parser.add_argument("-n", "--no_commit", help="No commit", action="store_true")
     args = parser.parse_args()
     context = Context()
     context.create(echo=args.echo)
@@ -289,8 +292,9 @@ if __name__ == '__main__':
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
     # m.compute_dailies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
-    m.compute_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
-    m.compute_iscri_monthly(2015, 2)
+    # m.compute_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
+    # m.compute_iscri_monthly(2015, 2)
+    m.compute_iscri_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
     # m.create_iscri(2015,1,"USA","CHN",1.57)
     print(f"Nb new daily risks: {m.nb_new_daily}")
     print(f"Nb new monthly risks: {m.nb_new_monthly}")

@@ -31,7 +31,7 @@ class Event(Base):
 
     id = Column(BigInteger, primary_key=True)
     global_event_id = Column(BigInteger, nullable=False, index=True)
-    date = Column(Date, nullable=False)
+    date = Column(Date, nullable=False, index=True)
     # day = Column(BigInteger, nullable=False)
     month_year = Column(Integer, nullable=False, index=True)
     year = Column(SmallInteger, nullable=False)
