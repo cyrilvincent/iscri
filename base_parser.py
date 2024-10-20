@@ -22,7 +22,6 @@ class BaseParser(metaclass=ABCMeta):
         self.row_num = 0
         self.nb_row = 0
         self.nb_ram = 0
-        self.is_new_file = False
         self.events: set[int] = set()
         # self.actors: dict[tuple[str, str, str, str, str, str, str, str, str, str], Actor] = {}
         # self.geos: dict[tuple[int, str], Geo] = {}
@@ -35,22 +34,25 @@ class BaseParser(metaclass=ABCMeta):
         y = int(name[:4])
         if y <= 2005:
             name = f"{y}.zip"
+            date = datetime.date(y, 12, 31)
         else:
             ym = int(name[:6])
             if ym <= 201303:
                 name = f"{ym}.zip"
+                date = datetime.date(y, int(name[4:6]), 1)
+            else:
+                date = datetime.date(y, int(name[4:6]), int(name[6:8]))
         self.file = self.context.session.execute(
             select(File).where(File.name == name)).scalars().first()
         if self.file is None:
-            print(f"Error: file {name} does not exist in db")
-            quit(3)
-            # self.file = File()
-            # self.file.id = int(name.split(".")[0])
-            # self.file.name = name
-            # self.file.online_date = self.file.download_date = self.file.dezip_date = datetime.datetime.now()
-            # self.file.date = datetime.datetime()
-            # self.is_new_file = True
-            # self.context.session.add(self.file)
+            print(f"Warning: file {name} does not exist in db, creating it")
+            # quit(3)
+            self.file = File()
+            self.file.id = int(name.split(".")[0])
+            self.file.name = name
+            self.file.online_date = self.file.download_date = self.file.dezip_date = datetime.datetime.now()
+            self.file.date = date  # Never tested
+            self.context.session.add(self.file)
         self.file.import_start_date = datetime.datetime.now()
 
     def load_cache(self):
@@ -130,7 +132,7 @@ class BaseParser(metaclass=ABCMeta):
         self.file.import_end_date = datetime.datetime.now()
         print("Committing")
         self.context.session.commit()
-        self.duration(1.0)
+        self.duration(0.01)
 
 
     @abstractmethod

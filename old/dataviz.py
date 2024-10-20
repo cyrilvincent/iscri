@@ -24,7 +24,7 @@ import requests
 # print(covid_df.head(3))
 
 # load the low resolution world map
-world = gpd.read_file("data/110m_cultural.zip")
+world = gpd.read_file("../data/110m_cultural.zip")
 print(list(world.columns))
 world = world[['ADMIN', 'ADM0_A3', 'geometry']]
 world = world[world.ADMIN != "Antarctica"]
@@ -35,7 +35,7 @@ world = world[world.iso2 != "NULL"]
 # world.plot()
 # plt.show()
 
-covid_df = pd.read_json("data/covid.json")
+covid_df = pd.read_json("../data/covid.json")
 date = datetime.date(2020,4,1)
 covid_df = covid_df[covid_df['date'] == date.strftime("%Y-%m-%d")]
 print(covid_df.head(3))

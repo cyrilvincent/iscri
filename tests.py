@@ -17,7 +17,7 @@ import jupyterlab
 import ipywidgets
 
 
-class GDLETTests(TestCase):
+class ISCRITests(TestCase):
 
     def test_version(self):
         print(sys.version)

@@ -78,7 +78,7 @@ class JupyterService:
                                        "actor1_country_code": actor1_country_code,
                                        "actor2_country_code": actor2_country_code,
                                        "(actor1_type1_code": "'GOV' OR actor2_type1_code = 'GOV')",
-                                       "quad_class >=": 3, "goldstein_scale <": 0, "avg_tone <": 0}
+                                       "quad_class >=": 3}
                             )
         return self.get_by_sql(sql)
 

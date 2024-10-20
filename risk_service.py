@@ -103,8 +103,9 @@ class RiskService:
             select(Event).
             where((Event.date == d) & Event.is_root_event &
                   ((Event.actor1_type1_code == "GOV") | (Event.actor2_type1_code == "GOV")) &
-                  (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None)) &
-                  (Event.actor1_country_code != Event.actor2_country_code))).scalars().all() # Filtrer sur File m+1 ?
+                  (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None)) # &
+                  # (Event.actor1_country_code != Event.actor2_country_code))
+                  )).scalars().all() # Filtrer sur File m+1 ?
         first = True
         for e in l:
             # code1 = self.norm_country_code(e.actor1_country_code)
@@ -115,20 +116,21 @@ class RiskService:
                     print(f"Compute daily risk {d}")
                     first = False
                 dr = DailyRisk()
-                dr.total_nb = dr.total_article_nb = dr.quad3_nb = dr.quad4_nb = dr.article3_nb = dr.article4_nb = 0
+                # dr.total_nb = dr.total_article_nb = dr.quad3_nb = dr.quad4_nb = dr.article3_nb = dr.article4_nb = 0
+                dr.total_nb = dr.quad3_nb = dr.quad4_nb = 0
                 dr.actor1_code, dr.actor2_code = key
                 dr.date = d
                 dr.compute_date = datetime.datetime.now()
                 daily_dict[key] = dr
             daily_dict[key].total_nb += 1
-            daily_dict[key].total_article_nb += e.num_articles
-            if (e.goldstein_scale is None or e.goldstein_scale < 0) and e.avg_tone < 0:
-                if e.quad_class == 3:
-                    daily_dict[key].quad3_nb += 1
-                    daily_dict[key].article3_nb += e.num_articles
-                elif e.quad_class == 4:
-                    daily_dict[key].quad4_nb += 1
-                    daily_dict[key].article4_nb += e.num_articles
+            # daily_dict[key].total_article_nb += e.num_articles
+            # if (e.goldstein_scale is None or e.goldstein_scale < 0) and e.avg_tone < 0:
+            if e.quad_class == 3:
+                daily_dict[key].quad3_nb += 1
+                # daily_dict[key].article3_nb += e.num_articles
+            elif e.quad_class == 4:
+                daily_dict[key].quad4_nb += 1
+                # daily_dict[key].article4_nb += e.num_articles
         return daily_dict
 
     def compute_dailies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -221,17 +223,18 @@ class RiskService:
             select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month) &
                                 (Iscri.iscri > 1e-5))).scalars().all()
         for e in l:
-            if (e.actor1_code, e.actor2_code) not in dico:
-                i = Iscri()
-                i.risk3 = i.risk4 = i.risk = 0
-                i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
-                i.year, i.month = year, month
-                i.risk_date = datetime.datetime.now()
-                dico[e.actor1_code, e.actor2_code] = i, e
-                self.context.session.add(i)
-                self.nb_new_iscri += 1
-            else:
-                dico[e.actor1_code, e.actor2_code] = dico[e.actor1_code, e.actor2_code][0], e
+            if e.actor1_code != e.actor2_code:
+                if (e.actor1_code, e.actor2_code) not in dico:
+                    i = Iscri()
+                    i.risk3 = i.risk4 = i.risk = 0
+                    i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
+                    i.year, i.month = year, month
+                    i.risk_date = datetime.datetime.now()
+                    dico[e.actor1_code, e.actor2_code] = i, e
+                    self.context.session.add(i)
+                    self.nb_new_iscri += 1
+                else:
+                    dico[e.actor1_code, e.actor2_code] = dico[e.actor1_code, e.actor2_code][0], e
         for t in dico.values():
             self.compute_iscri(t[0], t[1])
         self.context.session.commit()
@@ -249,7 +252,7 @@ class RiskService:
             else:
                 print(f"Iscri is already computed for {m.year}-{m.month:02d}")
 
-    def modify_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
+    def update_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
                      iscri: float, iscri3=0.0, iscri4=0.0):
         i = (self.context.session.execute(
             select(Iscri).where((Iscri.year == year) & (Iscri.month == month) &
@@ -291,11 +294,14 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
-    # m.compute_dailies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
-    # m.compute_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
+    start_date = datetime.date(2015, 1, 1)
+    end_date = datetime.date(2016, 12, 31)
+    m.compute_dailies(start_date, end_date)
+    m.compute_monthlies(start_date, end_date)
     # m.compute_iscri_monthly(2015, 2)
-    m.compute_iscri_monthlies(datetime.date(2015, 1, 1), datetime.date(2015, 12, 31))
-    # m.create_iscri(2015,1,"USA","CHN",1.57)
+    # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
+    m.compute_iscri_monthlies(start_date, end_date)
+
     print(f"Nb new daily risks: {m.nb_new_daily}")
     print(f"Nb new monthly risks: {m.nb_new_monthly}")
     print(f"Nb new iscris: {m.nb_new_iscri}")

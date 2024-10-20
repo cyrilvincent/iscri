@@ -214,9 +214,9 @@ class DailyRisk(Base):
     quad3_nb = Column(Float, nullable=False)
     quad4_nb = Column(Float, nullable=False)
     total_nb = Column(Float, nullable=False)
-    article3_nb = Column(Float, nullable=False)
-    article4_nb = Column(Float, nullable=False)
-    total_article_nb = Column(Float, nullable=False)
+    # article3_nb = Column(Float, nullable=False)
+    # article4_nb = Column(Float, nullable=False)
+    # total_article_nb = Column(Float, nullable=False)
     compute_date = Column(DateTime, nullable=False)
 
     __table_args__ = (UniqueConstraint('date', 'actor1_code', 'actor2_code'),)
