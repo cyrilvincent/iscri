@@ -2,3 +2,6 @@
 20140124.export.CSV.zip not in HTML
 20140125.export.CSV.zip not in HTML
 20140319.export.CSV.zip not in HTML
+20221110 dans l'HTML mais lien cassé
+20230322 MD5 faux
+20230323 dans l'HTML mais lien cassé

@@ -75,7 +75,14 @@ class RiskService:
             nb_not_in_html = 3
         elif year == 2014 and month == 3:
             nb_not_in_html = 1
-        return len(l) == self.last_day_of_month(year, month) - nb_not_in_html
+        elif year == 2022 and month == 11:
+            nb_not_in_html = 1
+        elif year == 2023 and month == 3:
+            nb_not_in_html = 2
+        res = len(l) >= self.last_day_of_month(year, month) - nb_not_in_html
+        if res is False:
+            pass
+        return res
 
     def norm_country_code(self, code: str) -> str:
         if len(code) == 3:
@@ -295,7 +302,18 @@ if __name__ == '__main__':
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
     start_date = datetime.date(2015, 1, 1)
-    end_date = datetime.date(2016, 12, 31)
+    end_date = datetime.date(2024, 9, 30)
+    # start_date = datetime.date(2022, 11, 1)
+    # end_date = datetime.date(2022, 11, 30)
+
+
+    # Month 2022-11 is not complete
+    # Compute risk month 2022-12
+    # Compute risk month 2023-01
+    # Compute risk month 2023-02
+    # Month 2023-03 is not complete
+
+
     m.compute_dailies(start_date, end_date)
     m.compute_monthlies(start_date, end_date)
     # m.compute_iscri_monthly(2015, 2)

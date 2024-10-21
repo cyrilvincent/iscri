@@ -85,7 +85,7 @@ class GdletScrapper:
 
     def scrap(self):
         self.test()
-        first_date = datetime.date(2013, 4, 1)
+        first_date = datetime.date(2022, 11, 1)
         # start_date = self.get_last_file().date + datetime.timedelta(days=-2)
         # if start_date < first_date:
         #     start_date = first_date
@@ -106,11 +106,14 @@ class GdletScrapper:
                     self.context.session.add(f)
                     row = res[0]
                     f.md5 = row[-35:-3]
-                    if f.dezip_date is None:
-                        self.download(f)
-                    self.context.session.commit()
+                    self.context.session.add(f)
                 else:
                     print(f"{name} not in HTML")
+                    break
+            if f.dezip_date is None:
+                self.download(f)
+            self.context.session.commit()
+
 
     def not_int_html(self):
         self.test()
