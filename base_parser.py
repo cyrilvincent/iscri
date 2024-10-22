@@ -1,13 +1,8 @@
 import datetime
-from typing import Dict, Optional, Tuple
-
-from sqlalchemy import select, func
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select
 from abc import ABCMeta, abstractmethod
 import csv
 import time
-import re
-
 from sqlentities import Event, File #, Actor, Geo
 
 time0 = time.perf_counter()

@@ -43,9 +43,15 @@ class EventParserBatch: # Ne pas faire d'héritage car j'ai besoin de reinstanci
         id_max = 20991231
         for e in l:
             # print(e.name[:-4])
-            if id_min <= e.id <= id_max:
+            id = e.id
+            if len(str(e.id)) == 6:
+                id *= 100
+            elif len(str(e.id)) == 4:
+                id *= 10000
+            if id_min <= id <= id_max:
                 self.nb_file_to_import += 1
-                self.parse_file(e.name[:-4])
+                name: str = e.name[:-4] if "export" in e.name else e.name[:-3] + "csv"
+                self.parse_file(name)
 
     def remove_doublons(self):
         print("Check for doublons")

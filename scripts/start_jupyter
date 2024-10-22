@@ -1,0 +1,4 @@
+deactivate
+.venv\Scripts\activate
+jupyter lab
+/!\ Jupyter est dans le venv gdelt

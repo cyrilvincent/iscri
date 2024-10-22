@@ -1,6 +1,6 @@
-from sqlalchemy import Column, ForeignKey, Boolean, UniqueConstraint, Table, Index, DateTime
+from sqlalchemy import Column, ForeignKey, Boolean, UniqueConstraint, Index, DateTime
 from sqlalchemy.types import BigInteger, Integer, String, Float, Date, SmallInteger
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped
 from dbcontext import Base
 
 # file 1-* event  -1 url
@@ -64,9 +64,9 @@ class Event(Base):
     actor2_type2_code = Column(String(3))
     actor2_type3_code = Column(String(3))
     is_root_event = Column(Boolean, nullable=False)
-    event_code = Column(String(10), nullable=False)
-    event_base_code = Column(String(10), nullable=False)
-    event_root_code = Column(String(10), nullable=False)
+    event_code = Column(String(10))
+    event_base_code = Column(String(10))
+    event_root_code = Column(String(10))
     quad_class = Column(SmallInteger, nullable=False)
     goldstein_scale = Column(Float)
     num_mentions = Column(Integer, nullable=False)
@@ -94,7 +94,7 @@ class Event(Base):
     action_geo_lat = Column(Float)
     action_geo_lon = Column(Float)
     action_feature_id = Column(String(10))
-    date_added = Column(Date, nullable=False)
+    date_added = Column(Date)
     url_id = Column(ForeignKey('url.id'))
     url: Mapped["Url"] = relationship()
     parse_date = Column(DateTime, nullable=False)

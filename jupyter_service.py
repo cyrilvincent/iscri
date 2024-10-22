@@ -8,6 +8,8 @@ from sqlentities import File, Event, DailyRisk, Iscri
 import dateutil.relativedelta
 import country_converter as coco
 import pandas as pd
+import scipy.signal
+import numpy as np
 
 
 class JupyterService:
@@ -15,6 +17,9 @@ class JupyterService:
     def __init__(self, context):
         self.context = context
         self.df = None
+
+    def savgol(self, x, wl=3, p=2, mode="nearest"):
+        return scipy.signal.savgol_filter(x, window_length=wl, polyorder=p, mode=mode)
 
     def make_sql(self, table="event", criterias: dict[str, str | float] = {}) -> str:
         sql = f"SELECT * FROM {table} "
@@ -103,6 +108,9 @@ class JupyterService:
                                        "year * 100 + month <=": end_year * 100 + end_month})
         return self.get_by_sql(sql + " order by year, month")
 
-
+if __name__ == '__main__':
+    s = JupyterService(None)
+    res = s.savgol(np.arange(100))
+    print(res)
 
 

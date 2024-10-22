@@ -52,16 +52,16 @@ class RiskService:
             yield start_date + datetime.timedelta(n)
 
     def is_all_files_presents_by_year_month(self, year: int, month: int):
-        if year < 2007:
+        if year < 2006:
             e = (self.context.session.execute(
-                select(File).where((File.date <= datetime.date(2007, 12, 1)) & (File.import_end_date.isnot(None))))
+                select(File)
+                .where((File.date == datetime.date(year, 12, 31)) & (File.import_end_date.isnot(None))))
                  .scalars().first())
             return e is not None
         if year < 2013 or (year == 2013 and month < 4):
             e = (self.context.session.execute(
                 select(File)
-                .where((File.date == datetime.date(year, month, 1)) &
-                       (File.import_end_date.isnot(None))))
+                .where((File.date == datetime.date(year, month, 1)) & (File.import_end_date.isnot(None))))
                  .scalars().first())
             return e is not None
         l = (self.context.session.execute(
@@ -176,9 +176,10 @@ class RiskService:
                 i.risk = i.risk3 = i.risk4 = 0
                 dico[e.actor1_code, e.actor2_code] = i
             i = dico[(e.actor1_code, e.actor2_code)]
-            i.risk += ((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day
-            i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day
-            i.risk4 += (e.quad4_nb / e.total_nb) / last_month_day.day
+            if e.total_nb != 0:
+                i.risk += ((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day
+                i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day
+                i.risk4 += (e.quad4_nb / e.total_nb) / last_month_day.day
         return dico
 
     def compute_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -301,16 +302,15 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
-    start_date = datetime.date(2015, 1, 1)
-    end_date = datetime.date(2024, 9, 30)
+    # start_date = datetime.date(1979, 4, 1)
+    # end_date = datetime.date(2024, 10, 1)
+    end_date = datetime.date.today()
+    start_date = datetime.date(end_date.year - 1, 1, 1)
     # start_date = datetime.date(2022, 11, 1)
     # end_date = datetime.date(2022, 11, 30)
 
 
     # Month 2022-11 is not complete
-    # Compute risk month 2022-12
-    # Compute risk month 2023-01
-    # Compute risk month 2023-02
     # Month 2023-03 is not complete
 
 

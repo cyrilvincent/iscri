@@ -32,6 +32,9 @@ class EventParser(BaseParser):
             # e.day = self.get_int((row[1]))
             e.month_year = self.get_int(row[2])
             e.year = self.get_int(row[3])
+            if e.month_year is None or e.year is None:
+                e.month_year = e.date.year * 100 + e.date.month
+                e.year = e.date.year
             # e.fraction_date = self.get_float(row[4])
             i = 0
             e.actor1_code = self.get_str(row[5 + i])
@@ -228,7 +231,7 @@ class EventParser(BaseParser):
             # self.parse_events(e, row)
             self.context.session.add(e)
             # self.actor_scoring(e)
-        if self.nb_new_event % self.nb_row_commit == 0:
+        if self.nb_new_event != 0 and self.nb_new_event % self.nb_row_commit == 0:
             if self.nb_row_commit >= 1000:
                 print("Committing")
             self.context.session.commit()

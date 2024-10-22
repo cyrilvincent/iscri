@@ -1,37 +1,11 @@
-Tu gardes NumArticles dans ton code stata (capture rename v34 numarticles), est il pris en compte dans le calcul des scores ?
-
-Je voudrais la définition exacte des variables suivantes
-C is the daily  number of verbal or material conflict : QuadClass >= 3 & GoldsteinScale < 0 & AvgTone < 0 & ActorXType1Code == "GOV" & IsRootEvent == True
-E is the daily total number of cooperative and conflictual interstate events : ActorXCountryCode == "GOV" & IsRootEvent == True, ne tient pas compte ni de QuadClass, ni de GoldStrinSale ni de AvgTine
-
-ISCR(s, t, my) = (1 / D(my)) * SUM(C(s, t, d) / E(s, t, d)) + 0.9 * ISCR(s, t, my - 1)
-où s = Actor1Countrycode
-et t = Actor2CountryCode et s != t
-et my = MonthYear
-et D(my) = nb jour du mois my
-et C(s, t, d) = Nombre de (QuadClass >= 3 & GoldsteinScale < 0 & AvgTone < 0 & ActorXCountryCode == "GOV" & IsRootEvent == True & d == Day) pour s et t
-et E(s, t, d) = Nombre de (ActorXType1yCode == "GOV" & IsRootEvent == 1 & d == Day) pour s et t
-et SUM est la somme pour tous le jours d du mois my
-
-Vocabulaire
-Je propose d'appeler pour une paire source, target
-ISCRIm : l'ISCRI du mois m
-RISKm : le risque moyen du mois m, afin d'avoir la formule ISCRIm = RISKm + 0.9 * ISCRIm-1, pour QuadClass == 3 | 4
-RISKd : le risque du jour d, on a donc RISKm = SUM(RISKd) / NbJourDuMoism, pour QuadClass == 3 | 4
-RISK3 : idem RISK pour QuadClass == 3
-RISK4 : idem RISK pour QuadClass == 4
-RISKd = C / E
-C = MEAN NumArticle négatif (à préciser) ou SUM EVENT ?
-E = MEAN NumArticle ou SUM EVENT ?
-On a donc RISKm = ISCRIm - 0.9 + ISCRIm-1
-
-S'assurer du résultat SQL avec BigQuery sur Cloud
-
-/!\ Je bosse sur tous les fichiers et pas 1 les dates sont réparties => Ajouter filtre < file.date du 1 du mois suivant
-
-*drop if goldsteinscale>=0
-*drop if avgtone>=0 => ces variables sortent de nul part
-
+graine initiale = nb_event_neg / nb_event pour toutes les pairs en 1980 voir volumetry
+Enlever l'index is_root_event inutile
+Ajouter index IsRootEvent+Actor1Type1Code ET IsRootEvent+Actor2Type1Code
+Seed4=0.08
+Seed3=0.12
+Seed=0.2
+Im = R + a * Im-1
+Im = Im-1 * 0.9 + R * 0.1
 
 
 
