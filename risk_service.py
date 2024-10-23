@@ -3,17 +3,11 @@ import datetime
 from typing import Dict, Optional, Tuple
 import art
 from sqlalchemy import select, func
-from sqlalchemy.orm import joinedload
-from abc import ABCMeta, abstractmethod
-import csv
-import time
 import calendar
 import config
 from dbcontext import Context
 from sqlentities import File, Event, DailyRisk, Iscri
 import dateutil.relativedelta
-import country_converter as coco
-
 
 class RiskService:
 
@@ -25,7 +19,6 @@ class RiskService:
         self.nb_new_daily = 0
         self.nb_new_monthly = 0
         self.nb_new_iscri = 0
-        self.cc = coco.CountryConverter()
 
     # def load_cache(self):
     #     print("Making cache")
@@ -83,26 +76,6 @@ class RiskService:
         if res is False:
             pass
         return res
-
-    def norm_country_code(self, code: str) -> str:
-        if len(code) == 3:
-            if code in self.cc.data.ISO3.values:
-                return code
-            if code in self.cc.data.IOC:
-                res = self.cc.convert([code], src="IOC", to="ISO3", enforce_list=True, not_found=None)[0]
-                if len(res) != 0:
-                    return res[0]
-        elif len(code) == 2:
-            if code in self.cc.data.ISO2:
-                res = self.cc.convert([code], src="ISO2", to="ISO3", enforce_list=True, not_found=None)[0]
-                if len(res) != 0:
-                    return res[0]
-        res = self.cc.convert([code], to="ISO3", enforce_list=True, not_found=None)[0]
-        if len(res) != 0:
-            return res[0]
-        return code
-
-
 
     def compute_daily(self, d: datetime.date) -> dict[tuple[str, str], DailyRisk] | None:
         daily_dict: dict[tuple[str, str], DailyRisk] = {}

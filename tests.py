@@ -143,12 +143,13 @@ class ISCRITests(TestCase):
         s.compute_dailies(d, d + datetime.timedelta(days=1))
 
     def test_coco(self):
+        import logging
         cc = coco.CountryConverter()
         pd.set_option('display.max_columns', None)
         pd.set_option('display.width', 500)
         print(cc.data.head(50))
         print(cc.data.ISO3)
-        s = RiskService(None)
+        s = JupyterService(None)
         res = s.norm_country_code("FRA")
         self.assertEqual("FRA", res)
         res = s.norm_country_code("FR")
@@ -156,7 +157,9 @@ class ISCRITests(TestCase):
         res = s.norm_country_code("France")
         self.assertEqual("FRA", res)
         res = s.norm_country_code("XXX")
-        self.assertEqual("XXX", res)
+        self.assertIsNone(res)
+        res = s.norm_country_code("ITA")
+        self.assertEqual("ITA", res)
 
     def test_risk_compute_monthly(self):
         d = datetime.date(2015, 2, 28)
@@ -200,6 +203,13 @@ class ISCRITests(TestCase):
         s = JupyterService(context)
         res = s.get_by_global_event_id(420620763)
         self.assertIsNotNone(res)
+
+    def test_get_norm_iscris_by_dates_codes(self):
+        context = Context()
+        context.create(echo=True)
+        s = JupyterService(context)
+        res = s.get_norm_iscris_by_dates_codes(2024, 1, 2024, 9, "USA", "CHN")
+        print(res)
 
 
 
