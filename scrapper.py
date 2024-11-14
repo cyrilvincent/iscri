@@ -5,22 +5,21 @@ import urllib.parse
 import urllib.error
 import hashlib
 import art
-from sqlalchemy import select
-
 import config
 import zipfile
-
 from dbcontext import Context
 from sqlentities import File
+from sqlalchemy import select
 
 
-class GdletScrapper:
+class GdeltScrapper:
 
-    def __init__(self, context, echo=False, fake_save=False):
+    def __init__(self, context, echo=False, fake_download=False, no_commit=False):
         self.url = "http://data.gdeltproject.org/events/index.html"
         self.context = context
         self.echo = echo
-        self.fake_save = fake_save
+        self.fake_download = fake_download
+        self.no_commit = no_commit
         self.html = ""
         self.rows: list[str] = []
         self.nb_new_file = 0
@@ -57,7 +56,7 @@ class GdletScrapper:
         path = f"{config.download_path}/zip/"
         url = self.url.replace("index.html", file.name)
         print(f"Downloading {url} to {path}")
-        if self.fake_save:
+        if self.fake_download:
             file.download_date = file.dezip_date = datetime.datetime.now()
         else:
             try:
@@ -112,8 +111,8 @@ class GdletScrapper:
                     break
             if f.dezip_date is None:
                 self.download(f)
-            self.context.session.commit()
-
+            if not self.no_commit:
+                self.context.session.commit()
 
     def not_int_html(self):
         self.test()
@@ -143,7 +142,8 @@ class GdletScrapper:
                     row = [row for row in self.rows if f.name in row][0]
                     f.md5 = row[-35:-3]
                     self.download(f)
-                self.context.session.commit()
+                if not self.no_commit:
+                    self.context.session.commit()
 
     def scrap_before_2006(self):
         self.test()
@@ -160,26 +160,27 @@ class GdletScrapper:
                 row = [row for row in self.rows if f.name in row][0]
                 f.md5 = row[-35:-3]
                 self.download(f)
-            self.context.session.commit()
+            if not self.no_commit:
+                self.context.session.commit()
 
 
 if __name__ == '__main__':
     art.tprint(config.name, "big")
-    print("Gdlet Scrapper")
+    print("Gdelt Scrapper")
     print("==============")
     print(f"V{config.version}")
     print(config.copyright)
     print()
-    parser = argparse.ArgumentParser(description="Gdlet Parser")
+    parser = argparse.ArgumentParser(description="Gdelt Parser")
     parser.add_argument("-e", "--echo", help="Sql Alchemy echo", action="store_true")
     parser.add_argument("-o", "--old", help="Download from 1979 to 2005", action="store_true")
     parser.add_argument("-p", "--old2", help="Download from 2006 to 2013", action="store_true")
-    parser.add_argument("-f", "--fake_save", help="Faking the save and dezip", action="store_true")
+    parser.add_argument("-f", "--fake_download", help="Faking the download and dezip", action="store_true")
     parser.add_argument("-n", "--no_commit", help="No commit", action="store_true")
     args = parser.parse_args()
     context = Context()
     context.create(echo=args.echo)
-    p = GdletScrapper(context, args.echo, args.fake_save)
+    p = GdeltScrapper(context, args.echo, args.fake_download, args.no_commit)
     if args.old:
         p.scrap_before_2006()
     if args.old2:

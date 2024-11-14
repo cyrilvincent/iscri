@@ -19,6 +19,7 @@ class RiskService:
         self.nb_new_daily = 0
         self.nb_new_monthly = 0
         self.nb_new_iscri = 0
+        self.iscri_acceleration = 0.9
 
     # def load_cache(self):
     #     print("Making cache")
@@ -98,19 +99,23 @@ class RiskService:
                 dr = DailyRisk()
                 # dr.total_nb = dr.total_article_nb = dr.quad3_nb = dr.quad4_nb = dr.article3_nb = dr.article4_nb = 0
                 dr.total_nb = dr.quad3_nb = dr.quad4_nb = 0
+                dr.goldstein_quad3_nb = dr.goldstein_quad4_nb = dr.goldstein_nb = 0
                 dr.actor1_code, dr.actor2_code = key
                 dr.date = d
                 dr.compute_date = datetime.datetime.now()
                 daily_dict[key] = dr
             daily_dict[key].total_nb += 1
-            # daily_dict[key].total_article_nb += e.num_articles
-            # if (e.goldstein_scale is None or e.goldstein_scale < 0) and e.avg_tone < 0:
             if e.quad_class == 3:
                 daily_dict[key].quad3_nb += 1
-                # daily_dict[key].article3_nb += e.num_articles
             elif e.quad_class == 4:
                 daily_dict[key].quad4_nb += 1
-                # daily_dict[key].article4_nb += e.num_articles
+            if e.goldstein_scale is not None and e.goldstein_scale < 0:
+                daily_dict[key].goldstein_nb += 1
+                if e.quad_class == 3:
+                    daily_dict[key].goldstein_quad3_nb += 1
+                elif e.quad_class == 4:
+                    daily_dict[key].goldstein_quad4_nb += 1
+
         return daily_dict
 
     def compute_dailies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -147,12 +152,17 @@ class RiskService:
                 i.year, i.month = last_month_day.year, last_month_day.month
                 i.risk_date = datetime.datetime.now()
                 i.risk = i.risk3 = i.risk4 = 0
+                i.risk_g = i.risk_g3 = i.risk_g4 = i.risk_g34 = 0
                 dico[e.actor1_code, e.actor2_code] = i
             i = dico[(e.actor1_code, e.actor2_code)]
             if e.total_nb != 0:
                 i.risk += ((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day
                 i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day
                 i.risk4 += (e.quad4_nb / e.total_nb) / last_month_day.day
+                i.risk_g34 += ((e.goldstein_quad3_nb + e.goldstein_quad4_nb) / e.total_nb) / last_month_day.day
+                i.risk_g3 += (e.goldstein_quad3_nb / e.total_nb) / last_month_day.day
+                i.risk_g4 += (e.goldstein_quad4_nb / e.total_nb) / last_month_day.day
+                i.risk_g += (e.goldstein_nb / e.total_nb) / last_month_day.day
         return dico
 
     def compute_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -166,7 +176,7 @@ class RiskService:
             if (e.year, e.month) not in self.monthly_set:
                 self.monthly_set.add((e.year, e.month))
         for m in self.month_range(start_date, end_date):
-            if (m.year, m.month) not in self.monthly_set:  # On devrait pouvoir recalculer le mois en cours
+            if (m.year, m.month) not in self.monthly_set:
                 if self.is_all_files_presents_by_year_month(m.year, m.month):  # sauf pour le mois en cours
                     dico = self.compute_monthly(m)
                     for i in dico.values():
@@ -178,15 +188,20 @@ class RiskService:
                     print(f"Month {m.year}-{m.month:02d} is not complete")
 
     def iscri(self, risk: float, previous: float) -> float:
-        return risk + 0.9 * previous
+        return risk + self.iscri_acceleration * previous
 
     def compute_iscri(self, i: Iscri, previous: Iscri | None) -> Iscri:
         if previous is None:
             previous = Iscri()
             previous.iscri3 = previous.iscri4 = previous.iscri = 0
+            previous.iscri_g34 = previous.iscri_g3 = previous.iscri_g4 = previous.iscri_g = 0
         i.iscri3 = self.iscri(i.risk3, previous.iscri3)
         i.iscri4 = self.iscri(i.risk4, previous.iscri4)
         i.iscri = self.iscri(i.risk, previous.iscri)
+        i.iscri_g3 = self.iscri(i.risk_g3, previous.iscri_g3)
+        i.iscri_g4 = self.iscri(i.risk_g4, previous.iscri_g4)
+        i.iscri_g34 = self.iscri(i.risk_g34, previous.iscri_g34)
+        i.iscri_g = self.iscri(i.risk_g, previous.iscri_g)
         i.iscri_date = datetime.datetime.now()
         return i
 
@@ -207,7 +222,8 @@ class RiskService:
             if e.actor1_code != e.actor2_code:
                 if (e.actor1_code, e.actor2_code) not in dico:
                     i = Iscri()
-                    i.risk3 = i.risk4 = i.risk = 0
+                    i.risk3 = i.risk4 = i.risk = 0  # # For iscri when no risk in the current month
+                    i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = 0
                     i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
                     i.year, i.month = year, month
                     i.risk_date = datetime.datetime.now()
@@ -275,22 +291,21 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
-    # start_date = datetime.date(1979, 4, 1)
-    # end_date = datetime.date(2024, 10, 1)
-    end_date = datetime.date.today()
-    start_date = datetime.date(end_date.year - 1, 1, 1)
+    start_date = datetime.date(1979, 4, 1)
+    end_date = datetime.date(2024, 10, 1)
+    # end_date = datetime.date.today()
+    # start_date = datetime.date(end_date.year - 1, 1, 1)
     # start_date = datetime.date(2022, 11, 1)
     # end_date = datetime.date(2022, 11, 30)
 
 
     # Month 2022-11 is not complete
     # Month 2023-03 is not complete
-
-
-    m.compute_dailies(start_date, end_date)
-    m.compute_monthlies(start_date, end_date)
-    # m.compute_iscri_monthly(2015, 2)
     # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
+
+
+    # m.compute_dailies(start_date, end_date)
+    # m.compute_monthlies(start_date, end_date)
     m.compute_iscri_monthlies(start_date, end_date)
 
     print(f"Nb new daily risks: {m.nb_new_daily}")

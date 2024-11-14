@@ -9,8 +9,9 @@ import plotly.graph_objects as go
 import numpy as np
 from dbcontext import Context
 from jupyter_service import JupyterService
-
 from dash import Dash, dcc, html, callback, Output, Input, State
+import dash
+print(dash.__version__)
 
 class IscriDash:
 

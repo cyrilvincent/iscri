@@ -1,11 +1,5 @@
-graine initiale = nb_event_neg / nb_event pour toutes les pairs en 1980 voir volumetry
-Enlever l'index is_root_event inutile
 Ajouter index IsRootEvent+Actor1Type1Code ET IsRootEvent+Actor2Type1Code
-Seed4=0.08
-Seed3=0.12
-Seed=0.2
-Im = R + a * Im-1
-Im = Im-1 * 0.9 + R * 0.1
+
 
 
 

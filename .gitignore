@@ -1,5 +1,3 @@
-config.py
-
 **/.idea/**
 *.pickle
 **/chromedriver_win32/**

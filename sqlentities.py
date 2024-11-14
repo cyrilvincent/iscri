@@ -3,9 +3,7 @@ from sqlalchemy.types import BigInteger, Integer, String, Float, Date, SmallInte
 from sqlalchemy.orm import relationship, Mapped
 from dbcontext import Base
 
-# file 1-* event  -1 url
-#                1-* event_actor *-1 actor
-#                1-* event_geo *-1 geo
+# file 1-* event -1 url
 
 
 class File(Base):
@@ -211,12 +209,12 @@ class DailyRisk(Base):
     date = Column(Date, nullable=False)
     actor1_code = Column(String(50), nullable=False)
     actor2_code = Column(String(50), nullable=False)
-    quad3_nb = Column(Float, nullable=False)
-    quad4_nb = Column(Float, nullable=False)
-    total_nb = Column(Float, nullable=False)
-    # article3_nb = Column(Float, nullable=False)
-    # article4_nb = Column(Float, nullable=False)
-    # total_article_nb = Column(Float, nullable=False)
+    quad3_nb = Column(Integer, nullable=False)
+    quad4_nb = Column(Integer, nullable=False)
+    total_nb = Column(Integer, nullable=False)
+    goldstein_nb = Column(Integer, nullable=False)
+    goldstein_quad3_nb = Column(Integer, nullable=False)
+    goldstein_quad4_nb = Column(Integer, nullable=False)
     compute_date = Column(DateTime, nullable=False)
 
     __table_args__ = (UniqueConstraint('date', 'actor1_code', 'actor2_code'),)
@@ -244,10 +242,18 @@ class Iscri(Base):
     risk = Column(Float, nullable=False)
     risk3 = Column(Float, nullable=False)
     risk4 = Column(Float, nullable=False)
+    risk_g3 = Column(Float, nullable=False)
+    risk_g4 = Column(Float, nullable=False)
+    risk_g34 = Column(Float, nullable=False)
+    risk_g = Column(Float, nullable=False)
     risk_date = Column(DateTime, nullable=False)
     iscri = Column(Float)
     iscri3 = Column(Float)
     iscri4 = Column(Float)
+    iscri_g3 = Column(Float)
+    iscri_g4 = Column(Float)
+    iscri_g34 = Column(Float)
+    iscri_g = Column(Float)
     iscri_date = Column(DateTime)
 
     __table_args__ = (UniqueConstraint('year', 'month', 'actor1_code', 'actor2_code'),
