@@ -97,9 +97,9 @@ class RiskService:
                     print(f"Compute daily risk {d}")
                     first = False
                 dr = DailyRisk()
-                # dr.total_nb = dr.total_article_nb = dr.quad3_nb = dr.quad4_nb = dr.article3_nb = dr.article4_nb = 0
                 dr.total_nb = dr.quad3_nb = dr.quad4_nb = 0
                 dr.goldstein_quad3_nb = dr.goldstein_quad4_nb = dr.goldstein_nb = 0
+                dr.goldstein3_sum = dr.goldstein4_sum = 0
                 dr.actor1_code, dr.actor2_code = key
                 dr.date = d
                 dr.compute_date = datetime.datetime.now()
@@ -107,8 +107,12 @@ class RiskService:
             daily_dict[key].total_nb += 1
             if e.quad_class == 3:
                 daily_dict[key].quad3_nb += 1
+                if e.goldstein_scale is not None and e.goldstein_scale < 0:
+                    daily_dict[key].goldstein3_sum += e.goldstein_scale
             elif e.quad_class == 4:
                 daily_dict[key].quad4_nb += 1
+                if e.goldstein_scale is not None and e.goldstein_scale < 0:
+                    daily_dict[key].goldstein4_sum += e.goldstein_scale
             if e.goldstein_scale is not None and e.goldstein_scale < 0:
                 daily_dict[key].goldstein_nb += 1
                 if e.quad_class == 3:
@@ -152,17 +156,24 @@ class RiskService:
                 i.year, i.month = last_month_day.year, last_month_day.month
                 i.risk_date = datetime.datetime.now()
                 i.risk = i.risk3 = i.risk4 = 0
-                i.risk_g = i.risk_g3 = i.risk_g4 = i.risk_g34 = 0
+                # i.risk_g = 0 i.risk_g3 = i.risk_g4 = i.risk_g34 = 0
+                i.risk3g = i.risk4g = i.riskg = 0
                 dico[e.actor1_code, e.actor2_code] = i
             i = dico[(e.actor1_code, e.actor2_code)]
             if e.total_nb != 0:
                 i.risk += ((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day
-                i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day
+                i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day # * ( 1 + coef) * (-e.goldstein3.sum / e.quad3_nb) if quad3_nb != 0
                 i.risk4 += (e.quad4_nb / e.total_nb) / last_month_day.day
-                i.risk_g34 += ((e.goldstein_quad3_nb + e.goldstein_quad4_nb) / e.total_nb) / last_month_day.day
-                i.risk_g3 += (e.goldstein_quad3_nb / e.total_nb) / last_month_day.day
-                i.risk_g4 += (e.goldstein_quad4_nb / e.total_nb) / last_month_day.day
-                i.risk_g += (e.goldstein_nb / e.total_nb) / last_month_day.day
+                if e.quad3_nb != 0:
+                    i.risk3g += (((e.quad3_nb / e.total_nb) / last_month_day.day) * -e.goldstein3_sum / e.quad3_nb)
+                if e.quad4_nb != 0:
+                    i.risk4g += (((e.quad4_nb / e.total_nb) / last_month_day.day) * -e.goldstein4_sum / e.quad4_nb)
+                if e.quad3_nb + e.quad4_nb != 0:
+                    i.riskg += (((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day * (-e.goldstein4_sum - e.goldstein3_sum) / (e.quad4_nb + e.quad3_nb))
+                # i.risk_g34 += ((e.goldstein_quad3_nb + e.goldstein_quad4_nb) / e.total_nb) / last_month_day.day
+                # i.risk_g3 += (e.goldstein_quad3_nb / e.total_nb) / last_month_day.day
+                # i.risk_g4 += (e.goldstein_quad4_nb / e.total_nb) / last_month_day.day
+                # i.risk_g += (e.goldstein_nb / e.total_nb) / last_month_day.day
         return dico
 
     def compute_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -194,14 +205,18 @@ class RiskService:
         if previous is None:
             previous = Iscri()
             previous.iscri3 = previous.iscri4 = previous.iscri = 0
-            previous.iscri_g34 = previous.iscri_g3 = previous.iscri_g4 = previous.iscri_g = 0
+            # previous.iscri_g34 = previous.iscri_g3 = previous.iscri_g4 = previous.iscri_g = 0
+            previous.iscrig = previous.iscri3g = previous.iscri4g = 0
         i.iscri3 = self.iscri(i.risk3, previous.iscri3)
         i.iscri4 = self.iscri(i.risk4, previous.iscri4)
         i.iscri = self.iscri(i.risk, previous.iscri)
-        i.iscri_g3 = self.iscri(i.risk_g3, previous.iscri_g3)
-        i.iscri_g4 = self.iscri(i.risk_g4, previous.iscri_g4)
-        i.iscri_g34 = self.iscri(i.risk_g34, previous.iscri_g34)
-        i.iscri_g = self.iscri(i.risk_g, previous.iscri_g)
+        # i.iscri_g3 = self.iscri(i.risk_g3, previous.iscri_g3)
+        # i.iscri_g4 = self.iscri(i.risk_g4, previous.iscri_g4)
+        # i.iscri_g34 = self.iscri(i.risk_g34, previous.iscri_g34)
+        # i.iscri_g = self.iscri(i.risk_g, previous.iscri_g)
+        i.iscri3g = self.iscri(i.risk3g, previous.iscri3g)
+        i.iscri4g = self.iscri(i.risk4g, previous.iscri4g)
+        i.iscrig = self.iscri(i.riskg, previous.iscrig)
         i.iscri_date = datetime.datetime.now()
         return i
 
@@ -223,7 +238,8 @@ class RiskService:
                 if (e.actor1_code, e.actor2_code) not in dico:
                     i = Iscri()
                     i.risk3 = i.risk4 = i.risk = 0  # # For iscri when no risk in the current month
-                    i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = 0
+                    # i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = i.risk_g = 0
+                    i.risk3g = i.risk4g = i.riskg = 0
                     i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
                     i.year, i.month = year, month
                     i.risk_date = datetime.datetime.now()

@@ -1,4 +1,3 @@
-Ajouter index IsRootEvent+Actor1Type1Code ET IsRootEvent+Actor2Type1Code
 
 
 
