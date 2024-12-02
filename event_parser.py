@@ -158,14 +158,14 @@ class EventParser(BaseParser):
             e.url = self.get_str(row[57])
         return e
 
-    def actor_scoring(self, e: Event):
-        if e.actor1_code is not None and e.actor2_code is not None:
-            key = e.actor1_code, e.actor2_code
-            if e.actor1_code > e.actor2_code:
-                key = e.actor2_code, e.actor1_code
-            if key not in self.actor_scores:
-                self.actor_scores[key] = 0
-            self.actor_scores[key] += 1
+    # def actor_scoring(self, e: Event):
+    #     if e.actor1_code is not None and e.actor2_code is not None:
+    #         key = e.actor1_code, e.actor2_code
+    #         if e.actor1_code > e.actor2_code:
+    #             key = e.actor2_code, e.actor1_code
+    #         if key not in self.actor_scores:
+    #             self.actor_scores[key] = 0
+    #         self.actor_scores[key] += 1
 
     # def save_actor_scores(self):
     #     print(f"Saving {len(self.actor_scores)} actor scores")

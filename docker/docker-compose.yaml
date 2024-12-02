@@ -1,0 +1,29 @@
+version: '3.1'
+services:
+  iscri_jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.jupyter
+    ports:
+      - 8888:8888
+    volumes:
+      - ../data:/app/data:rw
+#    depends_on:
+#      - database
+
+#  database:
+#    image: postgres:14.6
+#    restart: always
+#    healthcheck:
+#      test: ["CMD-SHELL", "pg_isready"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    user: postgres
+#    environment:
+#      - POSTGRES_DB=iscri
+#      - POSTGRES_PASSWORD=iscri
+#    ports:
+#      - 5432:5432
+#    volumes:
+#      - ../backup:/app/backup:rw

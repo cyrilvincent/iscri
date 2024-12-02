@@ -133,7 +133,7 @@ if __name__ == '__main__':
             dcc.Dropdown(d.country_df.iso3, id='country1-dd', value="USA"),
             dcc.Dropdown(d.country_df.iso3, id='country2-dd', value="CHN"),
             html.Button('Submit', id='submit-val', n_clicks=0),
-            html.Div(dcc.Graph(figure=d.fig, id="myfigure"), id="div-figure"),
+            html.Div(dcc.Graph(figure=d.fig, id="myfigure", config={"displaylogo": False}), id="div-figure"),
             html.Div(id='debug')
             ],
             style=css
@@ -186,4 +186,4 @@ if __name__ == '__main__':
     #         return {'display': 'none'}
 
 
-    app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug=False, use_reloader=False)

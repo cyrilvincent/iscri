@@ -11,7 +11,7 @@ from sqlentities import Event, File, Url
 import time
 
 
-class EventParserBatch: # Ne pas faire d'héritage car j'ai besoin de reinstancier à chaque iteration
+class EventParserBatch:  # Ne pas faire d'héritage car j'ai besoin de reinstancier à chaque iteration
 
     def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
         self.context = context
@@ -27,7 +27,7 @@ class EventParserBatch: # Ne pas faire d'héritage car j'ai besoin de reinstanci
         db_size = context.db_size()
         p = EventParser(self.context, self.ignore_url, self.nb_row_commit)
         # print(f"Parsing {file}")
-        p.load(f"{config.download_path}/{file}") # A terme mettre un try
+        p.load(f"{config.download_path}/{file}")  # A terme mettre un try
         self.nb_file_imported += 1
         print(f"New Events: {p.nb_new_event}")
         print(f"Existing Events: {p.nb_existing_event}")
