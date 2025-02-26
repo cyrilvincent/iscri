@@ -123,7 +123,7 @@ class RiskService:
         return daily_dict
 
     def compute_dailies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
-        print("Compute daily risks") # On devrait recalculer les risques même 1 mois après
+        print("Compute daily risks")
         l: list[datetime.date] = self.context.session.execute(
             select(DailyRisk.date).where((DailyRisk.date >= start_date) & (DailyRisk.date <= end_date))
             .distinct()).scalars().all()
@@ -232,22 +232,22 @@ class RiskService:
             dico[e.actor1_code, e.actor2_code] = e, None
         l = self.context.session.execute(
             select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month) &
-                                (Iscri.iscri > 1e-5))).scalars().all()
+                                (Iscri.iscri > config.iscri_threshold))).scalars().all()
         for e in l:
-            if e.actor1_code != e.actor2_code:
-                if (e.actor1_code, e.actor2_code) not in dico:
-                    i = Iscri()
-                    i.risk3 = i.risk4 = i.risk = 0  # # For iscri when no risk in the current month
-                    # i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = i.risk_g = 0
-                    i.risk3g = i.risk4g = i.riskg = 0
-                    i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
-                    i.year, i.month = year, month
-                    i.risk_date = datetime.datetime.now()
-                    dico[e.actor1_code, e.actor2_code] = i, e
-                    self.context.session.add(i)
-                    self.nb_new_iscri += 1
-                else:
-                    dico[e.actor1_code, e.actor2_code] = dico[e.actor1_code, e.actor2_code][0], e
+            # if e.actor1_code != e.actor2_code: # Comment in 2025
+            if (e.actor1_code, e.actor2_code) not in dico:
+                i = Iscri()
+                i.risk3 = i.risk4 = i.risk = 0  # For iscri when no risk in the current month
+                # i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = i.risk_g = 0
+                i.risk3g = i.risk4g = i.riskg = 0
+                i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
+                i.year, i.month = year, month
+                i.risk_date = datetime.datetime.now()
+                dico[e.actor1_code, e.actor2_code] = i, e
+                self.context.session.add(i)
+                self.nb_new_iscri += 1
+            else:
+                dico[e.actor1_code, e.actor2_code] = dico[e.actor1_code, e.actor2_code][0], e
         for t in dico.values():
             self.compute_iscri(t[0], t[1])
         self.context.session.commit()
