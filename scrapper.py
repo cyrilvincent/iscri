@@ -109,6 +109,7 @@ class GdeltScrapper:
                     self.context.session.add(f)
                 else:
                     print(f"{name} not in HTML")
+                    continue
             if f.dezip_date is None or self.force_download:
                 self.download(f)
             if not self.no_commit:
