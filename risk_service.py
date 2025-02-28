@@ -9,6 +9,7 @@ from dbcontext import Context
 from sqlentities import File, Event, DailyRisk, Iscri
 import dateutil.relativedelta
 
+
 class RiskService:
 
     def __init__(self, context):
@@ -162,7 +163,7 @@ class RiskService:
             i = dico[(e.actor1_code, e.actor2_code)]
             if e.total_nb != 0:
                 i.risk += ((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day
-                i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day # * ( 1 + coef) * (-e.goldstein3.sum / e.quad3_nb) if quad3_nb != 0
+                i.risk3 += (e.quad3_nb / e.total_nb) / last_month_day.day  # * ( 1 + coef) * (-e.goldstein3.sum / e.quad3_nb) if quad3_nb != 0
                 i.risk4 += (e.quad4_nb / e.total_nb) / last_month_day.day
                 if e.quad3_nb != 0:
                     i.risk3g += (((e.quad3_nb / e.total_nb) / last_month_day.day) * -e.goldstein3_sum / e.quad3_nb)
@@ -309,8 +310,8 @@ if __name__ == '__main__':
     m = RiskService(context)
     start_date = datetime.date(1979, 4, 1)
     end_date = datetime.date(2024, 10, 1)
-    # end_date = datetime.date.today()
-    # start_date = datetime.date(end_date.year - 1, 1, 1)
+    end_date = datetime.date.today()
+    start_date = datetime.date(end_date.year - 1, 1, 1)
     # start_date = datetime.date(2022, 11, 1)
     # end_date = datetime.date(2022, 11, 30)
 

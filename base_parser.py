@@ -101,7 +101,7 @@ class BaseParser(metaclass=ABCMeta):
     def duration(self, coef=0.0):
         duration = time.perf_counter() - time0 + 1e-6
         print(f"Parse {self.row_num} rows {(self.row_num / self.nb_row) * 100:.1f}% "
-              f"in {(duration):.0f}s "
+              f"in {duration:.0f}s "
               f"@{self.row_num / duration:.0f}row/s "
               f"{((self.nb_row / self.row_num) * duration) - duration + (duration / (self.row_num / self.nb_row)) * coef:.0f}s remaining ")
 
@@ -128,7 +128,6 @@ class BaseParser(metaclass=ABCMeta):
         print("Committing")
         self.context.session.commit()
         self.duration(0.01)
-
 
     @abstractmethod
     def parse_row(self, row): ...

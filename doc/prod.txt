@@ -1,0 +1,11 @@
+Standard D4ds v5 = 4 CPU / 16 RAM / 1T DISK
+Compte local = azureuseriscri
+Port ouvert = SSH / HTTPS / HTTP / TCP 8840-8849
+IP Publique = 51.144.115.12
+L'url publique = iscri.skema.edu
+postgresql : https://documentation.ubuntu.com/server/how-to/databases/install-postgresql/index.html
+postgresql/sa
+psql --host 127.0.0.1 --username postgres --password
+psql --host 127.0.0.1 --username postgres --password --dbname iscri
+pg_restore -d iscri iscri.backup -U postgres -h 127.0.0.1 -c
+sudo systemctl restart postgresql.service
