@@ -66,7 +66,6 @@ class GdeltScrapper:
                     with open(path+file.name, "wb") as f:
                         f.write(content)
                     is_md5 = self.check_md5(path+file.name, file.md5)
-                    print(is_md5)
                     if is_md5:
                         file.download_date = datetime.datetime.now()
                         print(path, file.name)
