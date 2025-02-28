@@ -1,5 +1,4 @@
 import os
-
 name = "ISCRI"
 version = "1.0.0.RC"
 copyright = "(c) Skema 2024-2025"
