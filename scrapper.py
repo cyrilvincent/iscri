@@ -63,7 +63,10 @@ class GdeltScrapper:
         else:
             try:
                 with urllib.request.urlopen(url) as response:
+                    print(url)
                     content = response.read()
+                    print(content)
+                    print(path+file.name)
                     with open(path+file.name, "wb") as f:
                         f.write(content)
                     is_md5 = self.check_md5(path+file.name, file.md5)
