@@ -57,6 +57,7 @@ class GdeltScrapper:
         path = f"{config.download_path}/zip/"
         url = self.url.replace("index.html", file.name)
         print(f"Downloading {url} to {path}")
+        print(self.fake_download)
         if self.fake_download:
             file.download_date = file.dezip_date = datetime.datetime.now()
         else:
