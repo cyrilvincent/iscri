@@ -9,3 +9,5 @@ psql --host 127.0.0.1 --username postgres --password
 psql --host 127.0.0.1 --username postgres --password --dbname iscri
 pg_restore -d iscri iscri.backup -U postgres -h 127.0.0.1 -c
 sudo systemctl restart postgresql.service
+python3 -m venv ~/iscri/.venv
+source .venv/bin/activate

@@ -1,6 +1,8 @@
 print("ISCRI prerequesites")
 print("===================")
 print()
+import os
+print(f"OS: {os.name}")
 import sys
 print(f"Python version: {sys.version}")
 import config

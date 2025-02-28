@@ -114,7 +114,7 @@ class GdeltScrapper:
             if not self.no_commit:
                 self.context.session.commit()
 
-    def not_int_html(self):
+    def not_in_html(self):
         self.test()
         first_date = datetime.date(2013, 4, 1)
         for d in self.daterange(first_date, datetime.date.today()):
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         p.scrap_before_2006()
     if args.old2:
         p.scrap_before_2001304()
-    # p.not_int_html()
+    # p.not_in_html()
     p.scrap()
     print(f"Nb new files: {p.nb_new_file}")
 
