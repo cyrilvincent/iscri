@@ -86,6 +86,7 @@ class GdeltScrapper:
     def scrap(self):
         self.test()
         first_date = datetime.date(2013, 4, 1)
+        first_date = datetime.date(2014, 1, 21)
         start_date = self.get_last_file().date + datetime.timedelta(days=-90)
         if start_date < first_date or self.force_download:
             start_date = first_date
