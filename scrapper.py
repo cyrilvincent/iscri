@@ -14,12 +14,13 @@ from sqlalchemy import select
 
 class GdeltScrapper:
 
-    def __init__(self, context, echo=False, fake_download=False, no_commit=False):
+    def __init__(self, context, echo=False, fake_download=False, no_commit=False, force_download=False):
         self.url = "http://data.gdeltproject.org/events/index.html"
         self.context = context
         self.echo = echo
         self.fake_download = fake_download
         self.no_commit = no_commit
+        self.force_download = force_download
         self.html = ""
         self.rows: list[str] = []
         self.nb_new_file = 0
@@ -92,7 +93,7 @@ class GdeltScrapper:
         for d in self.daterange(start_date, datetime.date.today()):
             id = int(d.strftime("%Y%m%d"))
             f = self.get_file_by_id(id)
-            if f is None:
+            if f is None or self.force_download:
                 name = f"{id}.export.CSV.zip"
                 res = [row for row in self.rows if name in row]
                 if len(res) > 0:
@@ -109,7 +110,7 @@ class GdeltScrapper:
                 else:
                     print(f"{name} not in HTML")
                     break
-            if f.dezip_date is None:
+            if f.dezip_date is None or self.force_download:
                 self.download(f)
             if not self.no_commit:
                 self.context.session.commit()
@@ -131,13 +132,13 @@ class GdeltScrapper:
                 if y == 2013 and m == 4:
                     break
                 f = self.get_file_by_id(y * 100 + m)
-                if f is None:
+                if f is None or self.force_download:
                     f = File()
                     f.id = y * 100 + m
                     f.date = datetime.date(y, m, 1)
                     f.online_date = datetime.datetime.now()
                     self.context.session.add(f)
-                if f.dezip_date is None:
+                if f.dezip_date is None or self.force_download:
                     f.name = f"{y}{m:02d}.zip"
                     row = [row for row in self.rows if f.name in row][0]
                     f.md5 = row[-35:-3]
@@ -149,13 +150,13 @@ class GdeltScrapper:
         self.test()
         for y in range(1979, 2006):
             f = self.get_file_by_id(y)
-            if f is None:
+            if f is None or self.force_download:
                 f = File()
                 f.id = y
                 f.date = datetime.date(y, 12, 31)
                 f.online_date = datetime.datetime.now()
                 self.context.session.add(f)
-            if f.dezip_date is None:
+            if f.dezip_date is None or self.force_download:
                 f.name = f"{y}.zip"
                 row = [row for row in self.rows if f.name in row][0]
                 f.md5 = row[-35:-3]
@@ -176,11 +177,12 @@ if __name__ == '__main__':
     parser.add_argument("-o", "--old", help="Download from 1979 to 2005", action="store_true")
     parser.add_argument("-p", "--old2", help="Download from 2006 to 2013", action="store_true")
     parser.add_argument("-f", "--fake_download", help="Faking the download and dezip", action="store_true")
+    parser.add_argument("-d", "--force_download", help="Force the download and dezip", action="store_true")
     parser.add_argument("-n", "--no_commit", help="No commit", action="store_true")
     args = parser.parse_args()
     context = Context()
     context.create(echo=args.echo)
-    p = GdeltScrapper(context, args.echo, args.fake_download, args.no_commit)
+    p = GdeltScrapper(context, args.echo, args.fake_download, args.no_commit, args.force_download)
     if args.old:
         p.scrap_before_2006()
     if args.old2:
@@ -192,5 +194,6 @@ if __name__ == '__main__':
     # -o
     # -f -o
     # -p
+    # -o -p -n
 
 
