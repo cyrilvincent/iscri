@@ -57,15 +57,12 @@ class GdeltScrapper:
         path = f"{config.download_path}/zip/"
         url = self.url.replace("index.html", file.name)
         print(f"Downloading {url} to {path}")
-        print(self.fake_download)
         if self.fake_download:
             file.download_date = file.dezip_date = datetime.datetime.now()
         else:
             try:
                 with urllib.request.urlopen(url) as response:
-                    print(url)
                     content = response.read()
-                    print(path+file.name)
                     with open(path+file.name, "wb") as f:
                         f.write(content)
                     is_md5 = self.check_md5(path+file.name, file.md5)
