@@ -42,4 +42,3 @@ class Context:
             res = conn.execute(text(sql))
             row = res.fetchone()
             return row[0] / 2 ** 20
-

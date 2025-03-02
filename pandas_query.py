@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class PandasQuery:
 
     def __init__(self):
@@ -25,7 +26,6 @@ class PandasQuery:
                    "action_feature_id", "date_added"]
         if True:
             columns.append("url")
-        # print(len(columns))
         self.df.columns = columns
 
     def filter(self, predicate):
@@ -33,7 +33,6 @@ class PandasQuery:
 
     def get_by_id(self, id):
         return self.df[self.df.global_event_id == id]
-
 
 
 if __name__ == '__main__':

@@ -1,10 +1,7 @@
 from datetime import datetime
-
 import pandas as pd
-import sys
 from dateutil.relativedelta import relativedelta
 import datetime
-import config
 import plotly.graph_objects as go
 import numpy as np
 from dbcontext import Context
@@ -44,7 +41,6 @@ class IscriDash:
             yaxis_title="ISCRI",
             xaxis=dict(tickformat="%Y-%m")
         )
-
 
     def get_figure(self):
         self.fig = go.Figure()

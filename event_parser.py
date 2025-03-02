@@ -1,12 +1,10 @@
 import argparse
 import datetime
-from sqlalchemy import select, text
 import config
 import art
 from base_parser import BaseParser
 from dbcontext import Context
-from sqlentities import Event, File, Url #, Actor, EventActor, Geo, EventGeo
-
+from sqlentities import Event, Url
 
 
 class EventParser(BaseParser):
@@ -103,118 +101,12 @@ class EventParser(BaseParser):
             quit(1)
         return e
 
-    # def actor_mapper(self, row, num_actor: int) -> Actor | None:
-    #     e = Actor()
-    #     try:
-    #         i = 0 if num_actor == 1 else 10
-    #         e.code = self.get_str(row[5 + i])
-    #         if e.code is None:
-    #             return None
-    #         e.name = self.get_str(row[6 + i])
-    #         e.country_code = self.get_str(row[7 + i])
-    #         e.known_group_code = self.get_str(row[8 + i])
-    #         e.ethnic_code = self.get_str(row[9 + i])
-    #         e.religion1_code = self.get_str(row[10 + i])
-    #         e.religion2_code = self.get_str(row[11 + i])
-    #         e.type1_code = self.get_str(row[12 + i])
-    #         e.type2_code = self.get_str(row[13 + i])
-    #         e.type3_code = self.get_str(row[14 + i])
-    #         e.actor1_geo_type = self.get_int(row[35])
-    #         e.actor1_geo_fullname = self.get_str(row[36])
-    #         e.actor1_geo_country_code = self.get_str(row[37])
-    #         e.actor1_geo_adm1_code = self.get_str(row[38])
-    #         e.actor1_geo_lat = self.get_float(row[39])
-    #         e.actor1_geo_lon = self.get_float(row[40])
-    #         e.actor1_feature_id = self.get_str(row[41])
-    #         e.parse_date = datetime.datetime.now()
-    #     except Exception as ex:
-    #         print(f"ERROR Actor row {self.row_num} {e}\n{ex}\n{row}")
-    #         quit(2)
-    #     return e
-    #
-    # def geo_mapper(self, row, num_geo: int) -> Geo | None:
-    #     e = Geo()
-    #     try:
-    #         i = (num_geo - 1) * 7
-    #         e.type = self.get_int(row[35 + i])
-    #         if e.type is None:
-    #             return None
-    #         e.fullname = self.get_str(row[36 + i])
-    #         e.country_code = self.get_str(row[37 + i])
-    #         e.adm1_code = self.get_str(row[38 + i])
-    #         e.lat = self.get_float(row[39 + i])
-    #         e.lon = self.get_float(row[40 + i])
-    #         e.feature_id = self.get_str(row[41 + i])
-    #         e.parse_date = datetime.datetime.now()
-    #     except Exception as ex:
-    #         print(f"ERROR Geo row {self.row_num} {e}\n{ex}\n{row}")
-    #         quit(3)
-    #     return e
-
     def url_mapper(self, row) -> Url:
         e = None
         if len(row) > 57:
             e = Url()
             e.url = self.get_str(row[57])
         return e
-
-    # def actor_scoring(self, e: Event):
-    #     if e.actor1_code is not None and e.actor2_code is not None:
-    #         key = e.actor1_code, e.actor2_code
-    #         if e.actor1_code > e.actor2_code:
-    #             key = e.actor2_code, e.actor1_code
-    #         if key not in self.actor_scores:
-    #             self.actor_scores[key] = 0
-    #         self.actor_scores[key] += 1
-
-    # def save_actor_scores(self):
-    #     print(f"Saving {len(self.actor_scores)} actor scores")
-    #     for k in self.actor_scores.keys():
-    #         e = (self.context.session.execute(select(ActorScore)
-    #              .where((ActorScore.actor1_code == k[0]) & (ActorScore.actor2_code == k[1])))
-    #              .scalars().first())
-    #         if e is None:
-    #             e = ActorScore()
-    #             e.actor1_code = k[0]
-    #             e.actor2_code = k[1]
-    #             e.score = 0
-    #             e.last_update = 0
-    #             self.context.session.add(e)
-    #         if e.last_update < self.file.date:
-    #             e.last_update = self.file.date
-    #             e.score += self.actor_scores[k]
-    #             self.nb_actor_score += 1
-    #             self.context.session.commit()
-
-    # def parse_actors(self, e: Event, row):
-    #     for num in [1, 2]:
-    #         a = self.actor_mapper(row, num)
-    #         if a is not None:
-    #             if a.key not in self.actors:
-    #                 self.actors[a.key] = a
-    #                 self.nb_new_actor += 1
-    #             else:
-    #                 a = self.actors[a.key]
-    #             ea = EventActor()
-    #             ea.event = e
-    #             ea.actor = a
-    #             ea.num = num
-    #             self.nb_new_event_actor += 1
-    #
-    # def parse_events(self, e: Event, row):
-    #     for num in [1, 2, 3]:
-    #         g = self.geo_mapper(row, num)
-    #         if g is not None:
-    #             if g.key not in self.geos:
-    #                 self.geos[g.key] = g
-    #                 self.nb_new_event += 1
-    #             else:
-    #                 g = self.geos[g.key]
-    #             eg = EventGeo()
-    #             eg.event = e
-    #             eg.geo = g
-    #             eg.num = num
-    #             self.nb_new_event_geo += 1
 
     def parse_row(self, row):
         e = self.mapper(row)
@@ -238,9 +130,6 @@ class EventParser(BaseParser):
 
     def post_load(self):
         self.file.import_end_date = datetime.datetime.now()
-
-
-
 
 
 if __name__ == '__main__':
@@ -278,7 +167,6 @@ if __name__ == '__main__':
     # without commit row 12s 13h 0.5j
     # all except url : 37s 37h 1.5j
 
-
     # 20240922 full 238s 57Mo  241h 10j 210Go
 
     # 20170529 full 554s 133Mo 562h 24j  490Go
@@ -289,6 +177,4 @@ if __name__ == '__main__':
     # 20130401 11s
     # 201303 1088s (311s) NO RAM La clé 253461390 est dupliquée dans 201303 et 20130401
     # 20160912 87s 35s
-
-
 

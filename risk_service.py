@@ -1,8 +1,7 @@
 import argparse
 import datetime
-from typing import Dict, Optional, Tuple
 import art
-from sqlalchemy import select, func
+from sqlalchemy import select
 import calendar
 import config
 from dbcontext import Context
@@ -75,8 +74,6 @@ class RiskService:
         elif year == 2023 and month == 3:
             nb_not_in_html = 2
         res = len(l) >= self.last_day_of_month(year, month) - nb_not_in_html
-        if res is False:
-            pass
         return res
 
     def compute_daily(self, d: datetime.date) -> dict[tuple[str, str], DailyRisk] | None:
@@ -85,9 +82,9 @@ class RiskService:
             select(Event).
             where((Event.date == d) & Event.is_root_event &
                   ((Event.actor1_type1_code == "GOV") | (Event.actor2_type1_code == "GOV")) &
-                  (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None)) # &
+                  (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None))
                   # (Event.actor1_country_code != Event.actor2_country_code))
-                  )).scalars().all() # Filtrer sur File m+1 ?
+                  )).scalars().all()  # Filtrer sur File m+1 ?
         first = True
         for e in l:
             # code1 = self.norm_country_code(e.actor1_country_code)
@@ -157,7 +154,6 @@ class RiskService:
                 i.year, i.month = last_month_day.year, last_month_day.month
                 i.risk_date = datetime.datetime.now()
                 i.risk = i.risk3 = i.risk4 = 0
-                # i.risk_g = 0 i.risk_g3 = i.risk_g4 = i.risk_g34 = 0
                 i.risk3g = i.risk4g = i.riskg = 0
                 dico[e.actor1_code, e.actor2_code] = i
             i = dico[(e.actor1_code, e.actor2_code)]
@@ -171,10 +167,6 @@ class RiskService:
                     i.risk4g += (((e.quad4_nb / e.total_nb) / last_month_day.day) * -e.goldstein4_sum / e.quad4_nb)
                 if e.quad3_nb + e.quad4_nb != 0:
                     i.riskg += (((e.quad3_nb + e.quad4_nb) / e.total_nb) / last_month_day.day * (-e.goldstein4_sum - e.goldstein3_sum) / (e.quad4_nb + e.quad3_nb))
-                # i.risk_g34 += ((e.goldstein_quad3_nb + e.goldstein_quad4_nb) / e.total_nb) / last_month_day.day
-                # i.risk_g3 += (e.goldstein_quad3_nb / e.total_nb) / last_month_day.day
-                # i.risk_g4 += (e.goldstein_quad4_nb / e.total_nb) / last_month_day.day
-                # i.risk_g += (e.goldstein_nb / e.total_nb) / last_month_day.day
         return dico
 
     def compute_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -189,7 +181,7 @@ class RiskService:
                 self.monthly_set.add((e.year, e.month))
         for m in self.month_range(start_date, end_date):
             if (m.year, m.month) not in self.monthly_set:
-                if self.is_all_files_presents_by_year_month(m.year, m.month):  # sauf pour le mois en cours
+                if self.is_all_files_presents_by_year_month(m.year, m.month):
                     dico = self.compute_monthly(m)
                     for i in dico.values():
                         if i.risk != 0:
@@ -206,15 +198,10 @@ class RiskService:
         if previous is None:
             previous = Iscri()
             previous.iscri3 = previous.iscri4 = previous.iscri = 0
-            # previous.iscri_g34 = previous.iscri_g3 = previous.iscri_g4 = previous.iscri_g = 0
             previous.iscrig = previous.iscri3g = previous.iscri4g = 0
         i.iscri3 = self.iscri(i.risk3, previous.iscri3)
         i.iscri4 = self.iscri(i.risk4, previous.iscri4)
         i.iscri = self.iscri(i.risk, previous.iscri)
-        # i.iscri_g3 = self.iscri(i.risk_g3, previous.iscri_g3)
-        # i.iscri_g4 = self.iscri(i.risk_g4, previous.iscri_g4)
-        # i.iscri_g34 = self.iscri(i.risk_g34, previous.iscri_g34)
-        # i.iscri_g = self.iscri(i.risk_g, previous.iscri_g)
         i.iscri3g = self.iscri(i.risk3g, previous.iscri3g)
         i.iscri4g = self.iscri(i.risk4g, previous.iscri4g)
         i.iscrig = self.iscri(i.riskg, previous.iscrig)
@@ -235,11 +222,9 @@ class RiskService:
             select(Iscri).where((Iscri.year == previous_year) & (Iscri.month == previous_month) &
                                 (Iscri.iscri > config.iscri_threshold))).scalars().all()
         for e in l:
-            # if e.actor1_code != e.actor2_code: # Comment in 2025
             if (e.actor1_code, e.actor2_code) not in dico:
                 i = Iscri()
                 i.risk3 = i.risk4 = i.risk = 0  # For iscri when no risk in the current month
-                # i.risk_g34 = i.risk_g3 = i.risk_g4 = i.risk_g = i.risk_g = 0
                 i.risk3g = i.risk4g = i.riskg = 0
                 i.actor1_code, i.actor2_code = e.actor1_code, e.actor2_code
                 i.year, i.month = year, month

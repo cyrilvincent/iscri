@@ -1,17 +1,15 @@
 import argparse
-import datetime
-from sqlalchemy import select, text, and_
-from sqlalchemy.sql.operators import isnot
+from sqlalchemy import select, text
 import config
 import art
 import base_parser
 from dbcontext import Context
 from event_parser import EventParser
-from sqlentities import Event, File, Url
+from sqlentities import Event, File
 import time
 
 
-class EventParserBatch:  # Ne pas faire d'héritage car j'ai besoin de reinstancier à chaque iteration
+class EventParserBatch:
 
     def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
         self.context = context
@@ -26,7 +24,7 @@ class EventParserBatch:  # Ne pas faire d'héritage car j'ai besoin de reinstanc
         base_parser.time0 = time.perf_counter()
         db_size = context.db_size()
         p = EventParser(self.context, self.ignore_url, self.nb_row_commit)
-        p.load(f"{config.download_path}/{file}")  # A terme mettre un try
+        p.load(f"{config.download_path}/{file}")
         self.nb_file_imported += 1
         print(f"New Events: {p.nb_new_event}")
         print(f"Existing Events: {p.nb_existing_event}")

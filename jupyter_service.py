@@ -82,7 +82,7 @@ class JupyterService:
         return self.get_by_sql(sql)
 
     def get_events_by_dates_country_codes(self, start_date: str, end_date: str,
-                                         actor1_country_code: str, actor2_country_code: str):
+                                          actor1_country_code: str, actor2_country_code: str):
         sql = self.make_sql(criterias={"date >=": start_date, "date <=": end_date, "is_root_event": "true",
                                        "actor1_country_code": actor1_country_code,
                                        "actor2_country_code": actor2_country_code,
@@ -126,17 +126,6 @@ class JupyterService:
 
     def get_norm_iscris_by_dates_codes(self, start_year: int, start_month: int, end_year: int, end_month,
                                   actor1_code: str, actor2_code: str):
-        # sql = self.make_sql("iscri",
-        #                     criterias={"actor1_code": actor1_code, "actor2_code": actor2_code,
-        #                                "year * 100 + month >=": start_year * 100 + start_month,
-        #                                "year * 100 + month <=": end_year * 100 + end_month})
-        # df = self.get_by_sql(sql + " order by year, month")
-        # df["norm1_code"] = df.apply(lambda row: self.norm_country_code(row.actor1_code), axis=1)
-        # df["norm2_code"] = df.apply(lambda row: self.norm_country_code(row.actor2_code), axis=1)
-        # df = df.dropna(axis=1)
-        # df2 = self.get_countries()
-        # df2.set_index("iso3")
-        # df.join(df2, on="actor1_code")
         sql = f"""SELECT iscri.*, c1.lat as lat1, c1.lon as lon1, c2.lat as lat2, c2.lon as lon2 FROM iscri
                   LEFT OUTER JOIN country c1 ON iscri.actor1_code = c1.iso3
                   LEFT OUTER JOIN country c2 ON iscri.actor2_code = c2.iso3
@@ -145,6 +134,7 @@ class JupyterService:
                   AND year * 100 + month <= {end_year * 100 + end_month}"""
         df = self.get_by_sql(sql + " order by iscri.year, iscri.month")
         return df
+
 
 if __name__ == '__main__':
     s = JupyterService(None)

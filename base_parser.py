@@ -3,7 +3,7 @@ from sqlalchemy import select
 from abc import ABCMeta, abstractmethod
 import csv
 import time
-from sqlentities import Event, File #, Actor, Geo
+from sqlentities import Event, File
 
 time0 = time.perf_counter()
 
@@ -137,5 +137,4 @@ class BaseParser(metaclass=ABCMeta):
 
     def post_load(self):
         pass
-
 
