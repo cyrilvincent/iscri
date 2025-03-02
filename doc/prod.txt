@@ -18,6 +18,6 @@ zT5DaJtbKgtKaab
 sudo nohup /home/azureuseriscri/iscri/.venv/bin/jupyter-lab --port 8840 --ip 0.0.0.0 --no-browser --certfile=/etc/letsencrypt/live/iscri.skema.edu/fullchain.pem --keyfile /etc/letsencrypt/live/iscri.skema.edu/privkey.pem --allow-root &
 https://iscri.skema.edu:8840/
 Faire un pg dump
-/!\ regénérer le certbot dans un cron max 90j
+/!\ regénérer le certbot dans un cron max 90j puis redémarrer
 
 

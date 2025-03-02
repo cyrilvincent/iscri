@@ -319,7 +319,7 @@ if __name__ == '__main__':
     # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
 
     end_date = datetime.date.today()
-    start_date = datetime.date(end_date.year - 1, 1, 1)
+    start_date = datetime.date(end_date.year - 2, 1, 1)
 
     if args.daily:
         m.compute_dailies(start_date, end_date)
