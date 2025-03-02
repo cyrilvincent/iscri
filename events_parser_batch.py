@@ -26,19 +26,18 @@ class EventParserBatch:  # Ne pas faire d'héritage car j'ai besoin de reinstanc
         base_parser.time0 = time.perf_counter()
         db_size = context.db_size()
         p = EventParser(self.context, self.ignore_url, self.nb_row_commit)
-        # print(f"Parsing {file}")
         p.load(f"{config.download_path}/{file}")  # A terme mettre un try
         self.nb_file_imported += 1
         print(f"New Events: {p.nb_new_event}")
         print(f"Existing Events: {p.nb_existing_event}")
         new_db_size = context.db_size()
-        print(f"Database {context.db_name}: {new_db_size:.0f} Mb")
-        print(f"Database grows: {new_db_size - db_size:.0f} Mb ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
+        print(f"Database {context.db_name}: {new_db_size:.0f} MB")
+        print(f"Database grows: {new_db_size - db_size:.0f} MB ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
 
     def parse(self):
         l = self.context.session.execute(
             select(File).where((File.dezip_date.isnot(None)) & (File.import_end_date.is_(None)))
-            .order_by(File.dezip_date.desc())).scalars().all()
+            .order_by(File.dezip_date)).scalars().all()
         id_min = 19000101
         id_max = 20991231
         for e in l:

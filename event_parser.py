@@ -262,13 +262,10 @@ if __name__ == '__main__':
     p = EventParser(context, args.url, config.nb_row_commit)
     p.load(args.path)
     print(f"New Events: {p.nb_new_event}")
-    # print(f"Nb doublons: {p.nb_doublon}")
     print(f"Existing Events: {p.nb_existing_event}")
-    # print(f"New Actors: {p.nb_new_actor}")
-    # print(f"New Event-Actor: {p.nb_new_event_actor}")
     new_db_size = context.db_size() / 1024
-    print(f"Database {context.db_name}: {new_db_size:.0f} Gb")
-    print(f"Database grows: {new_db_size - db_size:.0f} Mb ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
+    print(f"Database {context.db_name}: {new_db_size:.0f} GB")
+    print(f"Database grows: {new_db_size - db_size:.0f} MB ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
 
     # -e data/20240921.small.CSV
     # data/20240921.export.CSV
