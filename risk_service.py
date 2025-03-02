@@ -302,6 +302,9 @@ if __name__ == '__main__':
     print()
     parser = argparse.ArgumentParser(description="Event Parser")
     parser.add_argument("-e", "--echo", help="Sql Alchemy echo", action="store_true")
+    parser.add_argument("-d", "--daily", help="Compute risks daily", action="store_true")
+    parser.add_argument("-m", "--monthly", help="Compute risks monthly", action="store_true")
+    parser.add_argument("-i", "--iscri", help="Compute iscris monthly", action="store_true")
     args = parser.parse_args()
     context = Context()
     context.create(echo=args.echo)
@@ -310,20 +313,20 @@ if __name__ == '__main__':
     m = RiskService(context)
     start_date = datetime.date(1979, 4, 1)
     end_date = datetime.date(2024, 10, 1)
-    end_date = datetime.date.today()
-    start_date = datetime.date(end_date.year - 1, 1, 1)
-    # start_date = datetime.date(2022, 11, 1)
-    # end_date = datetime.date(2022, 11, 30)
-
 
     # Month 2022-11 is not complete
     # Month 2023-03 is not complete
     # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
 
+    end_date = datetime.date.today()
+    start_date = datetime.date(end_date.year - 1, 1, 1)
 
-    # m.compute_dailies(start_date, end_date)
-    # m.compute_monthlies(start_date, end_date)
-    m.compute_iscri_monthlies(start_date, end_date)
+    if args.daily:
+        m.compute_dailies(start_date, end_date)
+    if args.monthly:
+        m.compute_monthlies(start_date, end_date)
+    if args.iscri:
+        m.compute_iscri_monthlies(start_date, end_date)
 
     print(f"Nb new daily risks: {m.nb_new_daily}")
     print(f"Nb new monthly risks: {m.nb_new_monthly}")

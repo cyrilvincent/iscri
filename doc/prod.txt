@@ -5,9 +5,19 @@ IP Publique = 51.144.115.12
 L'url publique = iscri.skema.edu
 postgresql : https://documentation.ubuntu.com/server/how-to/databases/install-postgresql/index.html
 postgresql/sa
-psql --host 127.0.0.1 --username postgres --password
 psql --host 127.0.0.1 --username postgres --password --dbname iscri
 pg_restore -d iscri iscri.backup -U postgres -h 127.0.0.1 -c
 sudo systemctl restart postgresql.service
 python3 -m venv ~/iscri/.venv
 source .venv/bin/activate
+https://jupyter-notebook.readthedocs.io/en/v6.5.2/public_server.html
+sudo .venv/bin/jupyter-lab --port 80 --allow-root --ip 0.0.0.0
+jupyter lab --port 8840 --ip 0.0.0.0 --no-browser
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem
+sudo /home/azureuseriscri/iscri/.venv/bin/jupyter-lab --port 8840 --ip 0.0.0.0 --no-browser --certfile=/etc/letsencrypt/live/iscri.skema.edu/fullchain.pem --keyfile /etc/letsencrypt/live/iscri.skema.edu/privkey.pem --allow-root
+/!\ regénérer le certbot dans un cron max 90j
+zT5DaJtbKgtKaab
+sudo nohup /home/azureuseriscri/iscri/.venv/bin/jupyter-lab --port 8840 --ip 0.0.0.0 --no-browser --certfile=/etc/letsencrypt/live/iscri.skema.edu/fullchain.pem --keyfile /etc/letsencrypt/live/iscri.skema.edu/privkey.pem --allow-root &
+https://iscri.skema.edu:8840/
+
+
