@@ -272,11 +272,6 @@ class RiskService:
         self.context.session.add(i)
         self.context.session.commit()
 
-    def compute(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
-        m.compute_dailies(start_date, end_date)
-        m.compute_monthlies(start_date, end_date)
-        m.compute_iscri_monthlies(start_date, end_date)
-
 
 if __name__ == '__main__':
     art.tprint(config.name, "big")
@@ -304,7 +299,7 @@ if __name__ == '__main__':
     # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
 
     end_date = datetime.date.today()
-    start_date = datetime.date(end_date.year - 2, 1, 1)
+    start_date = datetime.date(end_date.year - 1, 1, 1)
 
     if args.daily:
         m.compute_dailies(start_date, end_date)
