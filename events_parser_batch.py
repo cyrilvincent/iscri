@@ -39,7 +39,6 @@ class EventParserBatch:
         id_min = 19000101
         id_max = 20991231
         for e in l:
-            # print(e.name[:-4])
             id = e.id
             if len(str(e.id)) == 6:
                 id *= 100
@@ -80,12 +79,12 @@ if __name__ == '__main__':
     context = Context()
     context.create(echo=args.echo)
     db_size = context.db_size()
-    print(f"Database {context.db_name}: {db_size:.0f} Mb")
+    print(f"Database {context.db_name}: {db_size:.0f} MB")
     p = EventParserBatch(context, args.url, config.nb_row_commit)
     p.parse()
     print(f"Nb file imported: {p.nb_file_imported}/{p.nb_file_to_import}")
     # p.remove_doublons()
     # print(f"Nb removed doublons: {p.nb_doublon}")
     new_db_size = context.db_size()
-    print(f"Database {context.db_name}: {new_db_size:.0f} Mb")
-    print(f"Database grows: {new_db_size - db_size:.0f} Mb ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
+    print(f"Database {context.db_name}: {new_db_size:.0f} MB")
+    print(f"Database grows: {new_db_size - db_size:.0f} MB ({((new_db_size - db_size) / db_size) * 100:.1f}%)")

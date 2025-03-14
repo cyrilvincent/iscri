@@ -8,16 +8,8 @@ postgresql/sa
 psql --host 127.0.0.1 --username postgres --password --dbname iscri
 pg_restore -d iscri iscri.backup -U postgres -h 127.0.0.1 -c
 sudo systemctl restart postgresql.service
-python3 -m venv ~/iscri/.venv
-source .venv/bin/activate
 https://jupyter-notebook.readthedocs.io/en/v6.5.2/public_server.html
-sudo .venv/bin/jupyter-lab --port 80 --allow-root --ip 0.0.0.0
-jupyter lab --port 8840 --ip 0.0.0.0 --no-browser
-sudo /home/azureuseriscri/iscri/.venv/bin/jupyter-lab --port 8840 --ip 0.0.0.0 --no-browser --certfile=/etc/letsencrypt/live/iscri.skema.edu/fullchain.pem --keyfile /etc/letsencrypt/live/iscri.skema.edu/privkey.pem --allow-root
-zT5DaJtbKgtKaab
-sudo nohup /home/azureuseriscri/iscri/.venv/bin/jupyter-lab --port 8840 --ip 0.0.0.0 --no-browser --certfile=/etc/letsencrypt/live/iscri.skema.edu/fullchain.pem --keyfile /etc/letsencrypt/live/iscri.skema.edu/privkey.pem --allow-root &
 https://iscri.skema.edu:8840/
-Faire un pg dump
-/!\ regénérer le certbot dans un cron max 90j puis redémarrer
+crontab -e
 
 
