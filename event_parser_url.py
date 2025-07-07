@@ -76,7 +76,7 @@ if __name__ == '__main__':
     context = Context()
     context.create(echo=args.echo)
     db_size = context.db_size() / 1024
-    print(f"Database {context.db_name}: {db_size:.0f} Gb")
+    print(f"Database {context.db_name}: {db_size:.0f} GB")
     p = EventUrlParser(context, args.url, config.nb_row_commit)
     p.load(args.path)
     print(f"New Urls: {p.nb_new_url}")

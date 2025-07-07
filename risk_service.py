@@ -73,6 +73,10 @@ class RiskService:
             nb_not_in_html = 1
         elif year == 2023 and month == 3:
             nb_not_in_html = 2
+        elif year == 2025 and month == 6:
+            nb_not_in_html = 17
+        elif year == 2025 and month == 7:
+            nb_not_in_html = 1
         res = len(l) >= self.last_day_of_month(year, month) - nb_not_in_html
         return res
 
