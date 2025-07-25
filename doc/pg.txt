@@ -1,0 +1,7 @@
+PostgreSQL 17
+Table file : liste des fichier CSV et leur workflow de traitement dans la base pour pouvoir reprendre en cas de panne. Un file possède plusieurs event et un event possède 1 seul file
+Table event : liste des events GDELT, 1 ligne = 1 ligne d'un CSV
+Table url : 1 url peut être liée à 1 seul event, séparation de la table url car elle est très volumineuse, n'était pas chargé au départ. Les vieux event n'ont pas d'URL
+Table daily_risk : métriques journalières, c'est de la redondance mais cette table est nécessaire car les calculs sont très lents. Généré à partir de la table event
+Table iscri : métriques mensuels dont l'iscri, calculé à partir de daily_risk. Il n' a as de FK entre iscri et daily_risk car c'est une relation many_to_many et ca aurait complexifié le traitement pour rien
+Table country : liste de tous les pays et autres

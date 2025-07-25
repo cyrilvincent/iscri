@@ -1,0 +1,6 @@
+Linux only
+crontab -e
+
+Crontab journalier : scrapper.py + events_parser_batch.py + risk_service.py --daily + backup
+Crontab mensuel : risk_service.py --monthly --iscri
+Le tout mis dans scripts/*.sh

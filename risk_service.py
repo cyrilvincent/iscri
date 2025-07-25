@@ -21,14 +21,6 @@ class RiskService:
         self.nb_new_iscri = 0
         self.iscri_acceleration = 0.9
 
-    # def load_cache(self):
-    #     print("Making cache")
-    #     l = self.context.session.execute(select(DailyRisk.date)).scalars().all()
-    #     for e in l:
-    #         self.score_set.add(e)
-    #         self.nb_ram += 1
-    #     print(f"{self.nb_ram} objects in cache")
-
     def last_day_of_month(self, year: int, month: int) -> int:
         return calendar.monthrange(year, month)[1]
 
@@ -87,12 +79,9 @@ class RiskService:
             where((Event.date == d) & Event.is_root_event &
                   ((Event.actor1_type1_code == "GOV") | (Event.actor2_type1_code == "GOV")) &
                   (Event.actor1_country_code.isnot(None)) & (Event.actor2_country_code.isnot(None))
-                  # (Event.actor1_country_code != Event.actor2_country_code))
-                  )).scalars().all()  # Filtrer sur File m+1 ?
+                  )).scalars().all()
         first = True
         for e in l:
-            # code1 = self.norm_country_code(e.actor1_country_code)
-            # code2 = self.norm_country_code(e.actor2_country_code)
             key: tuple[str, str] = e.actor1_country_code, e.actor2_country_code
             if key not in daily_dict:
                 if first:
@@ -121,7 +110,6 @@ class RiskService:
                     daily_dict[key].goldstein_quad3_nb += 1
                 elif e.quad_class == 4:
                     daily_dict[key].goldstein_quad4_nb += 1
-
         return daily_dict
 
     def compute_dailies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
@@ -297,11 +285,6 @@ if __name__ == '__main__':
     m = RiskService(context)
     start_date = datetime.date(1979, 4, 1)
     end_date = datetime.date(2024, 10, 1)
-
-    # Month 2022-11 is not complete
-    # Month 2023-03 is not complete
-    # m.update_iscri(2015, 1, "USA", "CHN", 1.57)
-
     end_date = datetime.date.today()
     start_date = datetime.date(end_date.year - 1, 1, 1)
 
