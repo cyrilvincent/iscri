@@ -2,6 +2,9 @@ import pandas as pd
 
 
 class PandasQuery:
+    """
+    Used for jupyter
+    """
 
     def __init__(self):
         self.df = None

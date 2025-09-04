@@ -8,6 +8,9 @@ Base = declarative_base()
 
 
 class Context:
+    """
+    Sql Alchemy context
+    """
 
     def __init__(self, connection_string=config.connection_string):
         self.engine: Engine | None = None
@@ -16,27 +19,51 @@ class Context:
 
     @property
     def db_name(self):
+        """
+        :return: the db name
+        """
         index = self.connection_string.rindex("/")
         return self.connection_string[index + 1:]
 
     def create_engine(self, echo=False, create_all=True):
+        """
+        Create SqlAlchemy engine
+        :param echo: SqlAlchemy echo
+        :param create_all: SqlAlchemy create_all
+        """
         self.engine = create_engine(self.connection_string, echo=echo)
         if create_all:
             Base.metadata.create_all(self.engine)
 
     def create_session(self, expire_on_commit=False):
+        """
+        Create SqlAlchemy session
+        """
         Session = sessionmaker(bind=self.engine, autocommit=False, autoflush=False, expire_on_commit=expire_on_commit)
         self.session = Session()
 
     def get_session(self, expire_on_commit=False):
+        """
+        Return SqlAlchemy session
+        :return: the session
+        """
         Session = sessionmaker(bind=self.engine, autocommit=False, autoflush=False, expire_on_commit=expire_on_commit)
         return Session()
 
     def create(self, echo=False, create_all=True, expire_on_commit=False):
+        """
+        Create engine & session
+        :param echo:
+        :param create_all:
+        :param expire_on_commit:
+        """
         self.create_engine(echo, create_all)
         self.create_session(expire_on_commit)
 
     def db_size(self):
+        """
+        :return: the db size in Mb
+        """
         with self.engine.connect() as conn:
             sql = f"select pg_database_size('{self.db_name}')"
             res = conn.execute(text(sql))

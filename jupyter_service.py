@@ -6,6 +6,9 @@ import logging
 
 
 class JupyterService:
+    """
+    Not used
+    """
 
     def __init__(self, context):
         self.context = context

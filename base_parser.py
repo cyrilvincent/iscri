@@ -9,8 +9,21 @@ time0 = time.perf_counter()
 
 
 class BaseParser(metaclass=ABCMeta):
+    """
+    Classe de base des parser
+    """
+
 
     def __init__(self, context):
+        """
+        path = file path
+        file = SqlAlchemy file
+        row_num = parser current row
+        nb_row = total nb row of the file
+        nb_ram = nb row in self.events
+        events = list of event
+        :param context: SqlAlchemy context
+        """
         self.path: str | None = None
         self.file: File | None = None
         self.context = context
@@ -21,7 +34,12 @@ class BaseParser(metaclass=ABCMeta):
         # self.actors: dict[tuple[str, str, str, str, str, str, str, str, str, str], Actor] = {}
         # self.geos: dict[tuple[int, str], Geo] = {}
 
-    def get_file(self):
+    def get_file(self) -> File:
+        """
+        Querying the file in db path the path
+        If the file does not exist, the file is created in db
+        :return: the file
+        """
         name = self.path
         if "/" in name:
             name = self.path.split("/")[-1]
@@ -51,6 +69,10 @@ class BaseParser(metaclass=ABCMeta):
         self.file.import_start_date = datetime.datetime.now()
 
     def load_cache(self):
+        """
+        Load all events.global_event_id of a file in a dict
+        :return:
+        """
         print("Making cache")
         l = self.context.session.execute(select(Event.global_event_id).where(Event.file_id == self.file.id)).scalars().all()
         for e in l:
@@ -67,38 +89,80 @@ class BaseParser(metaclass=ABCMeta):
         print(f"{self.nb_ram} objects in cache")
 
     def test_file(self, path, encoding="utf8"):
+        """
+        Test if the file is valid
+        :param path: file path
+        :param encoding: encoding
+        """
         with open(path, encoding=encoding) as f:
             for _ in f:
                 self.nb_row += 1
         print(f"Found {self.nb_row} rows")
 
     def get_int(self, v):
+        """
+        Return int value of v
+        :param v: the value
+        :return: int value
+        """
         return None if v == "" else int(v)
 
     def get_float(self, v):
+        """
+        Return float value of v
+        :param v: the value
+        :return: float value
+        """
         return None if v == "" else float(v)
 
     def try_float(self, v):
+        """
+        Return the float value of v, if v is not a float return None
+        :param v: the value
+        :return: the float value of None
+        """
         try:
             return self.get_float(v)
         except:
             return None
 
     def get_str(self, v):
+        """
+        if v is None return None
+        :param v: the value
+        :return: v
+        """
         return None if v == "" else v
 
     def get_date(self, s: str) -> datetime.date:
+        """
+        Transform s in datetile
+        :param s: the value
+        :return: the date
+        """
         return None if s == "" else datetime.datetime.strptime(s, "%Y%m%d").date()
 
     def get_bool(self, v):
+        """
+        Return the bool value of v
+        :param v: the value
+        :return: the bool
+        """
         return None if v == '' else v == "1" or v == "Y"
 
     def strip_quotes(self, s: str) -> str:
+        """
+        Not used
+        """
         if len(s) > 0 and ((s[0] == '"' and s[-1] == '"') or (s[0] == "'" and s[-1] == "'")):
             return s[1:-1]
         return s
 
     def duration(self, coef=0.0):
+        """
+        Display duration
+        :param coef: not used
+        """
         duration = time.perf_counter() - time0 + 1e-6
         print(f"Parse {self.row_num} rows {(self.row_num / self.nb_row) * 100:.1f}% "
               f"in {duration:.0f}s "
@@ -106,6 +170,13 @@ class BaseParser(metaclass=ABCMeta):
               f"{((self.nb_row / self.row_num) * duration) - duration + (duration / (self.row_num / self.nb_row)) * coef:.0f}s remaining ")
 
     def load(self, path: str, delimiter='\t', encoding="utf8", header=False):
+        """
+        Parse a file
+        :param path: the file path
+        :param delimiter: delimiter
+        :param encoding: encoding
+        :param header: has header
+        """
         print(f"Loading {path}")
         self.path = path
         self.test_file(path, encoding)

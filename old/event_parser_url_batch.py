@@ -1,12 +1,11 @@
 import argparse
-from sqlalchemy import select, text
+from sqlalchemy import select
 import config
 import art
 import base_parser
 from dbcontext import Context
-from event_parser import EventParser
-from event_parser_url import EventUrlParser
-from sqlentities import Event, File
+from old.event_parser_url import EventUrlParser
+from sqlentities import File
 import time
 
 

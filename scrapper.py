@@ -13,8 +13,18 @@ from sqlalchemy import select
 
 
 class GdeltScrapper:
+    """
+    GDELT Scraper
+    """
 
     def __init__(self, context, echo=False, fake_download=False, no_commit=False, force_download=False):
+        """
+        :param context: SqlAlchemy context
+        :param echo: SqlAlchemy echo
+        :param fake_download: test only
+        :param no_commit: test only
+        :param force_download: test only
+        """
         self.url = "http://data.gdeltproject.org/events/index.html"
         self.context = context
         self.echo = echo
@@ -26,6 +36,9 @@ class GdeltScrapper:
         self.nb_new_file = 0
 
     def test(self):
+        """
+        Test GDELT page
+        """
         print(f"Open {self.url}")
         try:
             with urllib.request.urlopen(self.url) as response:
@@ -38,22 +51,44 @@ class GdeltScrapper:
             quit(1)
 
     def daterange(self, start_date: datetime.date, end_date: datetime.date):
+        """
+        Date generator
+        :param start_date:
+        :param end_date:
+        :return: the generator
+        """
         days = int((end_date - start_date).days)
         for n in range(days):
             yield start_date + datetime.timedelta(n)
 
     def check_md5(self, path: str, md5: str) -> bool:
+        """
+        Check if the file signature
+        :param path: the file path
+        :param md5: the signature
+        :return: True if the file has the good signature
+        """
         with open(path, "rb") as f:
             content = f.read()
             hash = hashlib.md5(content).hexdigest()
             return hash == md5
 
     def dezip(self, path: str, file: str):
+        """
+        Dezip the file
+        :param path: file path
+        :param file: file entry db
+        :return:
+        """
         print(f"Dezip {file} to {config.download_path}")
         with zipfile.ZipFile(path+file, 'r') as zip:
             zip.extractall(config.download_path)
 
     def download(self, file: File):
+        """
+        Download the file
+        :param file: file
+        """
         path = f"{config.download_path}/zip/"
         url = self.url.replace("index.html", file.name)
         print(f"Downloading {url} to {path}")
@@ -77,13 +112,26 @@ class GdeltScrapper:
         self.nb_new_file += 1
 
     def get_file_by_id(self, id: int) -> File | None:
+        """
+        Get a db file by id
+        :param id: file.id
+        :return: the file
+        """
         return self.context.session.get(File, id)
 
     def get_last_file(self) -> File:
+        """
+        Get the last downloaded and dezipped file
+        :return:
+        """
         return self.context.session.execute(
             select(File).where(File.dezip_date is not None).order_by(File.online_date.desc())).scalars().first()
 
     def scrap(self):
+        """
+        Scrap the GDELT page
+        :return:
+        """
         self.test()
         first_date = datetime.date(2013, 4, 1)
         first_date = datetime.date(2014, 1, 21)
@@ -116,6 +164,10 @@ class GdeltScrapper:
                 self.context.session.commit()
 
     def not_in_html(self):
+        """
+        Not used, for test only
+        :return:
+        """
         self.test()
         first_date = datetime.date(2013, 4, 1)
         for d in self.daterange(first_date, datetime.date.today()):
@@ -126,6 +178,10 @@ class GdeltScrapper:
                 print(f"{name} not in HTML")
 
     def scrap_before_2001304(self):
+        """
+        No more used
+        :return:
+        """
         self.test()
         for y in range(2006, 2014):
             for m in range(1, 13):
@@ -147,6 +203,9 @@ class GdeltScrapper:
                     self.context.session.commit()
 
     def scrap_before_2006(self):
+        """
+        No more used
+        """
         self.test()
         for y in range(1979, 2006):
             f = self.get_file_by_id(y)

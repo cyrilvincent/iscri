@@ -10,8 +10,14 @@ import dateutil.relativedelta
 
 
 class RiskService:
+    """
+    Risk compute
+    """
 
     def __init__(self, context):
+        """
+        :param context: SqlAlchemy context
+        """
         self.context = context
         self.daily_set: set[datetime.date] = set()
         self.monthly_set: set[tuple[int, int]] = set()
@@ -22,9 +28,20 @@ class RiskService:
         self.iscri_acceleration = 0.9
 
     def last_day_of_month(self, year: int, month: int) -> int:
+        """
+        :param year:
+        :param month:
+        :return: last day of the month
+        """
         return calendar.monthrange(year, month)[1]
 
     def month_range(self, start_date: datetime.date, end_date: datetime.date):
+        """
+        Month generator
+        :param start_date:
+        :param end_date:
+        :return: generator
+        """
         end = datetime.date(end_date.year, end_date.month, self.last_day_of_month(end_date.year, end_date.month))
         date = start_date
         while date < end:
@@ -33,11 +50,23 @@ class RiskService:
             date = date + dateutil.relativedelta.relativedelta(months=1)
 
     def date_range(self, start_date: datetime.date, end_date: datetime.date):
+        """
+        Date generator
+        :param start_date:
+        :param end_date:
+        :return: the generator
+        """
         days = int((end_date - start_date).days)
         for n in range(days):
             yield start_date + datetime.timedelta(n)
 
-    def is_all_files_presents_by_year_month(self, year: int, month: int):
+    def is_all_files_presents_by_year_month(self, year: int, month: int) -> bool:
+        """
+        Check if a month have all files
+        :param year:
+        :param month:
+        :return: True if month is complete
+        """
         if year < 2006:
             e = (self.context.session.execute(
                 select(File)
@@ -50,12 +79,15 @@ class RiskService:
                 .where((File.date == datetime.date(year, month, 1)) & (File.import_end_date.isnot(None))))
                  .scalars().first())
             return e is not None
+        # Quering all file in the month
         l = (self.context.session.execute(
                 select(File.id)
                 .where((File.date >= datetime.date(year, month, 1)) &
                        (File.date <= datetime.date(year, month, self.last_day_of_month(year, month))) &
                        (File.import_end_date.isnot(None))))
              .scalars().all())
+        # Hard coded
+        # File not present on gdelt
         nb_not_in_html = 0
         if year == 2014 and month == 1:
             nb_not_in_html = 3
@@ -69,10 +101,16 @@ class RiskService:
             nb_not_in_html = 17
         elif year == 2025 and month == 7:
             nb_not_in_html = 1
+        # Check is all file present
         res = len(l) >= self.last_day_of_month(year, month) - nb_not_in_html
         return res
 
     def compute_daily(self, d: datetime.date) -> dict[tuple[str, str], DailyRisk] | None:
+        """
+        Compute all DailyRisk for a day
+        :param d: the day
+        :return: A dict, key = pair of actor, value = the DailyRisk
+        """
         daily_dict: dict[tuple[str, str], DailyRisk] = {}
         l: list[Event] = self.context.session.execute(
             select(Event).
@@ -113,6 +151,11 @@ class RiskService:
         return daily_dict
 
     def compute_dailies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
+        """
+        Compute all DailyRisks for a range of day
+        :param start_date:
+        :param end_date:
+        """
         print("Compute daily risks")
         l: list[datetime.date] = self.context.session.execute(
             select(DailyRisk.date).where((DailyRisk.date >= start_date) & (DailyRisk.date <= end_date))
@@ -133,6 +176,11 @@ class RiskService:
         self.context.session.commit()
 
     def compute_monthly(self, last_month_day: datetime.date) -> dict[tuple[str, str], Iscri]:
+        """
+        Compute all Risks for a month
+        :param last_month_day: the last day of the month
+        :return: A dict with key = pair of actor, value = Iscri with only risk computed, not iscris
+        """
         print(f"Compute risk month {last_month_day.year}-{last_month_day.month:02d}")
         first_month_day = datetime.date(year=last_month_day.year, month=last_month_day.month, day=1)
         l: list[DailyRisk] = self.context.session.execute(
@@ -162,6 +210,11 @@ class RiskService:
         return dico
 
     def compute_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
+        """
+        Compute all Risks for a range of month
+        :param start_date:
+        :param end_date:
+        """
         print("Compute monthly risks")
         l: list[Iscri] = self.context.session.execute(
             select(Iscri)
@@ -184,9 +237,22 @@ class RiskService:
                     print(f"Month {m.year}-{m.month:02d} is not complete")
 
     def iscri(self, risk: float, previous: float) -> float:
+        """
+        Compute an ISCRI
+        ISRCIm = RISKm + 0.9 * ISCRIm-1
+        :param risk: the risk
+        :param previous: the prévious month iscri
+        :return: ISCRIm
+        """
         return risk + self.iscri_acceleration * previous
 
     def compute_iscri(self, i: Iscri, previous: Iscri | None) -> Iscri:
+        """
+        Compute an ISCRI SqlAlchemy entity
+        :param i: the ISCRI
+        :param previous: ISCRIm-1
+        :return: the ISCRI with computed ISCRI
+        """
         if previous is None:
             previous = Iscri()
             previous.iscri3 = previous.iscri4 = previous.iscri = 0
@@ -201,6 +267,11 @@ class RiskService:
         return i
 
     def compute_iscri_monthly(self, year: int, month: int):
+        """
+        Compute all ISCRIs for a month and saved
+        :param year:
+        :param month:
+        """
         print(f"Compute iscri month {year}-{month:02d}")
         previous_year, previous_month = year, month - 1
         if previous_month == 0:
@@ -231,6 +302,11 @@ class RiskService:
         self.context.session.commit()
 
     def compute_iscri_monthlies(self, start_date=datetime.date(1979, 1, 1), end_date=datetime.date.today()):
+        """
+        Compute all ISCRIs for a range of month and saved
+        :param start_date:
+        :param end_date:
+        """
         print("Compute iscris")
         for m in self.month_range(start_date, end_date):
             iscri: Iscri = self.context.session.execute(
@@ -245,6 +321,17 @@ class RiskService:
 
     def update_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
                      iscri: float, iscri3=0.0, iscri4=0.0):
+        """
+        Not used
+        :param year:
+        :param month:
+        :param actor1_code:
+        :param actor2_code:
+        :param iscri:
+        :param iscri3:
+        :param iscri4:
+        :return:
+        """
         i = (self.context.session.execute(
             select(Iscri).where((Iscri.year == year) & (Iscri.month == month) &
                                 (Iscri.actor1_code == actor1_code) & (Iscri.actor2_code == actor2_code))).
@@ -255,6 +342,16 @@ class RiskService:
 
     def create_iscri(self, year: int, month: int, actor1_code: str, actor2_code: str,
                      iscri: float, iscri3=0.0, iscri4=0.0):
+        """
+        Create a ISCRI entity for a new pair of actor and a new month
+        :param year:
+        :param month:
+        :param actor1_code: actor1 code
+        :param actor2_code: actor2 code
+        :param iscri: the ISCRI value
+        :param iscri3: the ISCRI3 value
+        :param iscri4: the ISCRI4 value
+        """
         i = Iscri()
         i.actor1_code, i.actor2_code = actor1_code, actor2_code
         i.year, i.month = year, month

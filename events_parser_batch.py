@@ -10,8 +10,16 @@ import time
 
 
 class EventParserBatch:
+    """
+    Parse a batch of event
+    """
 
     def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
+        """
+        :param context: SqlAlchemy context
+        :param ignore_url: ignore url
+        :param nb_row_commit: nb row before transaction
+        """
         self.context = context
         self.ignore_url = ignore_url
         self.nb_row_commit = nb_row_commit
@@ -20,6 +28,10 @@ class EventParserBatch:
         self.nb_doublon = 0
 
     def parse_file(self, file: str):
+        """
+        Call event_parser
+        :param file: the file
+        """
         self.context.create_session()
         base_parser.time0 = time.perf_counter()
         db_size = context.db_size()
@@ -33,6 +45,9 @@ class EventParserBatch:
         print(f"Database grows: {new_db_size - db_size:.0f} MB ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
 
     def parse(self):
+        """
+        Querying for all not imported files
+        """
         l = self.context.session.execute(
             select(File).where((File.dezip_date.isnot(None)) & (File.import_end_date.is_(None)))
             .order_by(File.dezip_date)).scalars().all()
@@ -50,6 +65,10 @@ class EventParserBatch:
                 self.parse_file(name)
 
     def remove_doublons(self):
+        """
+        Not used
+        :return:
+        """
         print("Check for doublons")
         sql = """select count(global_event_id) as nb, global_event_id from event
                group by global_event_id having count(global_event_id) > 1"""

@@ -12,7 +12,7 @@ print(config.copyright)
 print()
 context = Context()
 context.create()
-path = "data/countries.csv"
+path = "../data/countries.csv"
 print(f"Load {path}")
 df = pd.read_csv(path)
 df.index.names = ["id"]

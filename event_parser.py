@@ -8,21 +8,28 @@ from sqlentities import Event, Url
 
 
 class EventParser(BaseParser):
+    """
+    Event parser
+    """
 
     def __init__(self, context, ignore_url=False, nb_row_commit=config.nb_row_commit):
+        """
+        :param context: SqlAlchemy context
+        :param ignore_url: ignore url
+        :param nb_row_commit: nb row before transaction
+        """
         super().__init__(context)
         self.ignore_url = ignore_url
         self.nb_row_commit = nb_row_commit
         self.nb_existing_event = 0
         self.nb_new_event = 0
-        # self.nb_new_actor = 0
-        # self.nb_new_event_actor = 0
-        # self.nb_new_geo = 0
-        # self.nb_new_event_geo = 0
-        self.actor_scores: dict[(str, str), int] = {}
-        self.nb_actor_score = 0
 
     def mapper(self, row) -> Event:
+        """
+        Row mapper
+        :param row: row to parse
+        :return: the event
+        """
         e = Event()
         try:
             e.global_event_id = self.get_int(row[0])
@@ -102,6 +109,11 @@ class EventParser(BaseParser):
         return e
 
     def url_mapper(self, row) -> Url:
+        """
+        PArse the url
+        :param row: the row
+        :return: the url
+        """
         e = None
         if len(row) > 57:
             e = Url()
@@ -109,6 +121,10 @@ class EventParser(BaseParser):
         return e
 
     def parse_row(self, row):
+        """
+        Parse 1 row
+        :param row: the row
+        """
         e = self.mapper(row)
         if e.global_event_id in self.events:
             self.nb_existing_event += 1
@@ -129,6 +145,9 @@ class EventParser(BaseParser):
             self.context.session.commit()
 
     def post_load(self):
+        """
+        Save import_end_date
+        """
         self.file.import_end_date = datetime.datetime.now()
 
 

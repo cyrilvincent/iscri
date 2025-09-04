@@ -1,0 +1,40 @@
+Il s'agit d'un workflow 100% séquentiel
+Reprise sur panne
+Reprise à n'importe quelle étape
+Géré en Python et automatisé dans une crontab
+
+1/ CSV présent en ligne sur GDELT
+Fait par scrapper.py
+Ajout dans la table file
+File.online_date renseigné
+
+2/ CSV Download
+Fait par scrapper.py
+File.download_date renseigné uniquement si le download a fonctionné et que la signature est conforme
+
+3/ CSV Dezip
+Fait par scrapper.py
+File.dezip_date renseigné si le zip a fonctionné
+
+4/ Import CSV
+Fait par event_parser.py depuis event_parser_batch.py
+Début de l'import File.import_start_date renseigné
+Ajout dans la table event
+Si l'import se termine sans erreur File.import_end_date renseigné
+Reprise sur panne si il y a un plantage au milieu, un event ne peut pas être importé 2 fois
+
+5/ Calcul des métriques journaliers
+Fait par risk_service.py uniquement si File.import_end_date != null
+Ajout dans la table daily_risk pour toutes les pairs de pays possédant une valeur
+Ne respecte pas forcement l'ordre des downloads
+
+6/ Calcul des métriques mensuels
+Fait par risk_service.py uniquement si le mois est complet, c'est à dire que le nombre de File du mois == numéro du dernier jour du mois
+Exception géré dans le code par not_in_html
+Calcul des métriques mensuels dont l'iscri à partir des métriques journaliers
+Un métrique journalier non présent vaut 0
+Le calcul de l'Iscri est plus complexe qu'il n'en a l'air et est bien expliqué dans la documentation
+Des variantes de l'Iscri sont également codées
+
+
+
