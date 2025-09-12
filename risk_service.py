@@ -17,11 +17,17 @@ class RiskService:
     def __init__(self, context):
         """
         :param context: SqlAlchemy context
+        daily_set : list of days already computed in cache set
+        monthly_set : list of tuple year month already computed in cache set
+        nb_ram : not used
+        nb_new_daily : nb new daily risks computed and commited
+        nb_new_monthly : nb new monthly risks computed and commited
+        iscri_accelaration : iscri a parameter in ISCRIm = RISKm + a * ISCRIm-1
         """
         self.context = context
         self.daily_set: set[datetime.date] = set()
         self.monthly_set: set[tuple[int, int]] = set()
-        self.nb_ram = 0
+        self.nb_ram = 0  # to be removed
         self.nb_new_daily = 0
         self.nb_new_monthly = 0
         self.nb_new_iscri = 0
@@ -380,8 +386,8 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} Mb")
     m = RiskService(context)
-    start_date = datetime.date(1979, 4, 1)
-    end_date = datetime.date(2024, 10, 1)
+    # start_date = datetime.date(1979, 4, 1)
+    # end_date = datetime.date(2024, 10, 1)
     end_date = datetime.date.today()
     start_date = datetime.date(end_date.year - 1, 1, 1)
 

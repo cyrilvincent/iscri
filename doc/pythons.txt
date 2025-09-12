@@ -6,6 +6,8 @@ base_parser.py : Parser d'event abstract
 event_parser.py : Parser d'un CSV => table event & file
 events_parser_batch.py : Parser d'un lot de CSV => appel event_parser.py
 risk_service.py : Calculs des metrics journalier et mensuels : depuis la table event vers les tables daily_risk & iscri
+tests.py : test unitaires
+test.py : test de versions
 
 country_parser.py : n'est plus utilisé
 event_parser_url*.py : Non utilisé
