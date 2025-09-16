@@ -241,6 +241,8 @@ class RiskService:
                     self.context.session.commit()
                 else:
                     print(f"Month {m.year}-{m.month:02d} is not complete")
+            else:
+                print(f"Risks is already computed for month {m.year}-{m.month:02d}")
 
     def iscri(self, risk: float, previous: float) -> float:
         """
@@ -384,23 +386,21 @@ if __name__ == '__main__':
     context = Context()
     context.create(echo=args.echo)
     db_size = context.db_size()
-    print(f"Database {context.db_name}: {db_size:.0f} Mb")
+    print(f"Database {context.db_name}: {db_size:.0f} MB")
     m = RiskService(context)
     # start_date = datetime.date(1979, 4, 1)
     # end_date = datetime.date(2024, 10, 1)
     end_date = datetime.date.today()
     start_date = datetime.date(end_date.year - 1, 1, 1)
-
     if args.daily:
         m.compute_dailies(start_date, end_date)
     if args.monthly:
         m.compute_monthlies(start_date, end_date)
     if args.iscri:
         m.compute_iscri_monthlies(start_date, end_date)
-
     print(f"Nb new daily risks: {m.nb_new_daily}")
     print(f"Nb new monthly risks: {m.nb_new_monthly}")
     print(f"Nb new iscris: {m.nb_new_iscri}")
     new_db_size = context.db_size()
-    print(f"Database {context.db_name}: {new_db_size:.0f} Mb")
-    print(f"Database grows: {new_db_size - db_size:.0f} Mb ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
+    print(f"Database {context.db_name}: {new_db_size:.0f} MB")
+    print(f"Database grows: {new_db_size - db_size:.0f} MB ({((new_db_size - db_size) / db_size) * 100:.1f}%)")
