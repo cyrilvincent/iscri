@@ -148,10 +148,10 @@ class Iscri(Base):
     __tablename__ = "iscri" # monthly
 
     id = Column(BigInteger, primary_key=True)
-    year = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False, index=True)
     month = Column(Integer, nullable=False)
-    actor1_code = Column(String(50), nullable=False)
-    actor2_code = Column(String(50), nullable=False)
+    actor1_code = Column(String(50), nullable=False, index=True)
+    actor2_code = Column(String(50), nullable=False, index=True)
     risk = Column(Float, nullable=False)
     risk3 = Column(Float, nullable=False)
     risk4 = Column(Float, nullable=False)
