@@ -388,10 +388,10 @@ if __name__ == '__main__':
     db_size = context.db_size()
     print(f"Database {context.db_name}: {db_size:.0f} MB")
     m = RiskService(context)
-    # start_date = datetime.date(1979, 4, 1)
+    start_date = datetime.date(1979, 4, 1)
     # end_date = datetime.date(2024, 10, 1)
     end_date = datetime.date.today()
-    start_date = datetime.date(end_date.year - 1, 1, 1)
+    # start_date = datetime.date(end_date.year - 1, 1, 1)
     if args.daily:
         m.compute_dailies(start_date, end_date)
     if args.monthly:
